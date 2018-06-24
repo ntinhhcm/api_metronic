@@ -14,6 +14,9 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
     use Authenticatable, Authorizable;
 
     protected $table = 'plan';
+
+    public $timestamps = false;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -35,9 +38,8 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
      */
     public static function list($search = []) {
         $query = DB::table('plan')
-                ->leftJoin('member', 'member.id', '=', 'plan.member_id')
                 ->leftJoin('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
-                ->select(['member.id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2']);
+                ->select(['plan.member_id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2']);
 
         if (isset($search['badge_id'])) {
             $query->where('member.badge_id', '=', $search['badge_id']);
@@ -60,6 +62,9 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
                 $search['value2'] = 0;
             }
             $query->where('plan_detail.value', $cond, $search['value2']);
+        }
+        if (isset($search['member_id'])) {
+            $query->whereIn('plan.member_id', $search['member_id']);
         }
         return $query->get();
     }
@@ -96,5 +101,16 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
             ->leftJoin('member', 'member.id', '=', 'plan.member_id')
             ->where('member.id', '=', $member_id)
             ->delete();
+    }
+
+    public static function getStatusColor($value = 0) {
+        if ($value < 0) {
+            return '#8e8e8e';
+        } else if ($value == 0) {
+            return '#ff0000';
+
+        } else if ($value > 0) {
+            return '#4eff04';
+        }
     }
 }

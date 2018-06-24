@@ -28,6 +28,7 @@ class PlanController extends Controller
      * @return mixed
      */
     public function list() {
+        // Get condition to search
         $search_cond = [];
         if ($this->request->get('badge_id')) {
             $search_cond['badge_id'] = $this->request->get('badge_id');
@@ -35,38 +36,86 @@ class PlanController extends Controller
         if ($this->request->get('member_name')) {
             $search_cond['member_name'] = $this->request->get('member_name');
         }
+
+        // Pagination
+        $limit = 30;
+        if ( ! empty($this->request->get('pagination')['perpage'])) {
+            $limit = $this->request->get('pagination')['perpage'];
+        }
+        $page = 1;
+        if (! empty($this->request->get('pagination')['page'])) {
+            $page = $this->request->get('pagination')['page'];
+        }
+        $offset = ($page - 1) * $limit;
+
+        // Sort
+        $sort['type'] = 'asc';
+        if ( ! empty($this->request->get('sort')['sort'])) {
+            $sort['type'] = $this->request->get('sort')['sort'];
+        }
+        $sort['field'] = 'badge_id';
+        if ( ! empty($this->request->get('sort')['field'])) {
+            $sort['field'] = $this->request->get('sort')['field'];
+        }
+
+        // Get member list
+        $members = Member::getList($search_cond, $sort, $limit, $offset);
+
+        $member_ids = [];
+        foreach ($members as $member) {
+            $member_ids[] = $member->id;
+        }
+        $search_cond['member_id'] = $member_ids;
+
         if ($this->request->get('type') == 'credit') {
             $search_cond['value'] = $this->request->get('value');
         } else if ($this->request->get('type') == 'assign') {
             $search_cond['value2'] = $this->request->get('value');
         }
-        $members = Member::select('id', 'badge_id', 'member_name')->get();
+
         $plans = Plan::list($search_cond);
         $results = [];
 
+        $recordID = $offset;
         foreach ($members as $member) {
+            $recordID++;
             $result = [
+                'record_id' => $recordID,
                 'member_id' => $member->id,
                 'badge_id' => $member->badge_id,
                 'member_name' => $member->member_name,
             ];
-            foreach ($plans as $plan) {
+
+            for ($i = 1; $i <= 48; $i++) {
+                $result['value_' . $i] = Plan::getStatusColor();
+                $result['value2_' . $i] = Plan::getStatusColor();
+            }
+
+            foreach ($plans as $key => $plan) {
                 if ($plan->member_id == $member->id) {
-                    $result['plans'][] = [
-                        'year' => $plan->year,
-                        'month' => $plan->month,
-                        'value' => $plan->value,
-                        'value2' => $plan->value2,
-                    ];
+                    $month = $plan->month;
+                    $week = $plan->week;
+                    $week_of_month = ($month - 1) * 4 + $week;
+                    $result['value_' . $week_of_month] = Plan::getStatusColor($plan->value);
+                    $result['value2_' . $week_of_month] = Plan::getStatusColor($plan->value2);
+                    unset($plans[$key]);
                 }
             }
             $results[] = $result;
         }
+
+        $total = count(Member::getList());
+
         return response()->json([
-            'success' => 'true',
-            'message' => '',
-            'total_items' => count($results),
-            'items' => $results
+            'meta' => [
+                'page' => $page,
+                'pages' => ceil($total / $limit),
+                'perpage' => $limit,
+                'total' => $total,
+                'sort' => $sort['type'],
+                'field' => $sort['field'],
+            ],
+            'data' => $results,
         ]);
     }
 

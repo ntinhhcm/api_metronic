@@ -15,11 +15,12 @@ class CreatePlanTable extends Migration
     {
         Schema::create('plan', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('member_id');
-            $table->integer('month');
-            $table->integer('year');
+            $table->integer('member_id')->unsigned()->nullable(false);
+            $table->integer('month')->nullable(false);
+            $table->integer('year')->nullable(false);
 
-            $table->unique(['member_id', 'year', 'month']);
+            $table->foreign('member_id')->references('id')->on('member');
+            $table->unique(array('member_id', 'year', 'month'));
         });
     }
 

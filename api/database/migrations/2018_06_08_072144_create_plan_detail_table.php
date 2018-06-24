@@ -15,10 +15,10 @@ class CreatePlanDetailTable extends Migration
     {
         Schema::create('plan_detail', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('plan_id');
-            $table->float('value');
-            $table->float('value2');
-            $table->tinyInteger('week');
+            $table->integer('plan_id')->unsigned()->nullable(false);
+            $table->float('value')->default(0);
+            $table->float('value2')->default(0);
+            $table->tinyInteger('week')->nullable(false);
             $table->string('note_project');
             $table->timestamps();
         });
