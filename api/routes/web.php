@@ -16,11 +16,12 @@ $router->get('/', function () use ($router) {
 });
 
 $router->post('/api/login', ['uses' => 'AuthController@login']);
+$router->get('/api/verify', ['uses' => 'AuthController@verify']);
 
 $router->group(['prefix' => '/api/v1', 'middleware' => 'jwt.auth'], function() use ($router) {
 	$router->get('/plan', ['uses' => 'PlanController@list']);
 	$router->get('/plan/{member_id}', ['uses' => 'PlanController@edit']);
 	$router->post('/plan/{member_id}', ['uses' => 'PlanController@edit']);
 	$router->post('/plan/{member_id}/delete', ['uses' => 'PlanController@delete']);
-    $router->get('/plan/export', ['uses' => 'PlanController@export']);
+   // $router->get('/plan/export', ['uses' => 'PlanController@export']);
 });

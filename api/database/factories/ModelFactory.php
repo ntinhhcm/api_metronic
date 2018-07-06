@@ -36,7 +36,7 @@ $factory->define(App\Plan::class, function (Faker\Generator $faker) {
 
 $factory->define(App\PlanDetail::class, function (Faker\Generator $faker) {
     return [
-        'plan_id' => 27,
+        'plan_id' => 39,
         'value' => rand(-1,2),
         'value2' => rand(-1,2),
         'week' => rand(1,4),

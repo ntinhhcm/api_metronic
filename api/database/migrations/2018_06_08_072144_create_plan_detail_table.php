@@ -21,6 +21,9 @@ class CreatePlanDetailTable extends Migration
             $table->tinyInteger('week')->nullable(false);
             $table->string('note_project');
             $table->timestamps();
+
+            $table->foreign('plan_id')->references('id')->on('plan');
+            $table->unique(array('plan_id', 'week'));
         });
     }
 

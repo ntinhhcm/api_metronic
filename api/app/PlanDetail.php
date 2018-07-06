@@ -26,10 +26,11 @@ class PlanDetail extends Model implements AuthenticatableContract, AuthorizableC
     public function __contructor() {
     }
 
-    public static function deletePlanDetail($member_id) {
+    public static function deletePlanDetail($member_id, $year) {
         return DB::table('plan_detail')
             ->leftJoin('plan', 'plan.id', '=', 'plan_detail.plan_id')
             ->where('plan.member_id', '=', $member_id)
+            ->where('plan.year', '=', $year)
             ->delete();
     }
 }

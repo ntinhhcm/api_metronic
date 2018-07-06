@@ -33,7 +33,7 @@ class Member extends Model implements AuthenticatableContract, AuthorizableContr
             $query->where('badge_id', 'like', $condition['badge_id'] . '%');
         }
         if (isset($condition['member_name'])) {
-            $query->where('member_name', 'like', $condition['member_name'] . '%');
+            $query->whereIn('member_name', $condition['member_name']);
         }
         if (isset($order['field']) && isset($order['type'])) {
             $query->orderBy($order['field'], $order['type']);

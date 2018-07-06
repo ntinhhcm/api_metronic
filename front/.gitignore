@@ -1,0 +1,13 @@
+**/.svn
+**/*~
+**/*.bak
+**/*.swp
+**/Thumbs.db
+**/desktop.ini
+**/.DS_Store
+node_modules
+src/assets/app
+src/assets/demo
+src/assets/snippets
+src/assets/vendors
+dist

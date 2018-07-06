@@ -28,13 +28,17 @@ class PlanController extends Controller
      * @return mixed
      */
     public function list() {
+
         // Get condition to search
         $search_cond = [];
-        if ($this->request->get('badge_id')) {
+        if ($this->request->get('badge_id') != null && $this->request->get('badge_id') != '') {
             $search_cond['badge_id'] = $this->request->get('badge_id');
         }
-        if ($this->request->get('member_name')) {
-            $search_cond['member_name'] = $this->request->get('member_name');
+        if ($this->request->get('member_name') != null && $this->request->get('member_name') != '') {
+            $search_cond['member_name'] = explode(',', $this->request->get('member_name'));
+            array_walk($search_cond['member_name'], function(&$value) {
+                $value = trim($value);
+            });
         }
 
         // Pagination
@@ -67,10 +71,8 @@ class PlanController extends Controller
         }
         $search_cond['member_id'] = $member_ids;
 
-        if ($this->request->get('type') == 'credit') {
-            $search_cond['value'] = $this->request->get('value');
-        } else if ($this->request->get('type') == 'assign') {
-            $search_cond['value2'] = $this->request->get('value');
+        if ( ! empty($this->request->get('plan_year'))) {
+            $search_cond['plan_year'] = $this->request->get('plan_year');
         }
 
         $plans = Plan::list($search_cond);
@@ -87,8 +89,10 @@ class PlanController extends Controller
             ];
 
             for ($i = 1; $i <= 48; $i++) {
-                $result['value_' . $i] = Plan::getStatusColor();
-                $result['value2_' . $i] = Plan::getStatusColor();
+                $result['credit_c' . $i] = Plan::getStatusColor();
+                $result['assign_c' . $i] = Plan::getStatusColor();
+                $result['credit_' . $i] = 0;
+                $result['assign_' . $i] = 0;
             }
 
             foreach ($plans as $key => $plan) {
@@ -96,15 +100,17 @@ class PlanController extends Controller
                     $month = $plan->month;
                     $week = $plan->week;
                     $week_of_month = ($month - 1) * 4 + $week;
-                    $result['value_' . $week_of_month] = Plan::getStatusColor($plan->value);
-                    $result['value2_' . $week_of_month] = Plan::getStatusColor($plan->value2);
+                    $result['credit_c' . $week_of_month] = Plan::getStatusColor($plan->value);
+                    $result['assign_c' . $week_of_month] = Plan::getStatusColor($plan->value2);
+                    $result['credit_' . $week_of_month] = $plan->value;
+                    $result['assign_' . $week_of_month] = $plan->value2;
                     unset($plans[$key]);
                 }
             }
             $results[] = $result;
         }
 
-        $total = count(Member::getList());
+        $total = count(Member::getList($search_cond));
 
         return response()->json([
             'meta' => [
@@ -128,8 +134,14 @@ class PlanController extends Controller
      * @return mixed
      */
     public function edit($member_id) {
+        $year = $this->request->get('year');
+        $plan_year = date("Y");
+        if( ! empty($year) && is_numeric($year))
+        {
+            $plan_year = $year;
+        }
         if ($this->request->isMethod('get')) {
-            $plan_list = Plan::getPlan($badge_id);
+            $plan_list = Plan::getPlan($member_id, $plan_year);
             return response()->json([
                 'success' => 'true',
                 'message' => '',
@@ -138,9 +150,7 @@ class PlanController extends Controller
             ]);
         }
 
-
         $plan = $this->request->get('plan');
-        $year = $this->request->get('year');
         $member_id = $this->request->get('member_id');
 
         // Checking member exists
@@ -156,33 +166,44 @@ class PlanController extends Controller
         $this->delete($member_id);
 
         DB::beginTransaction();
+
         try {
             $month_check = [];
-            foreach ($plan[$year] as $month => $value) {
-                // Insert plan and get Id
-                $id = Plan::insertGetId([
-                    'member_id' => $member_id,
-                    'year' => $year,
-                    'month' => $month,
-                ]);
-                if ($id) {
-                    $plan_detail_ins = [];
-                    foreach ($value as $week => $plan_detail) {
-                        $plan_detail_ins[] = [
-                            'plan_id' => $id,
-                            'week'    => $week,
-                            'value'   => $plan_detail['value'],
-                            'value2'   => $plan_detail['value2'],
-                        ];
+            if($plan) {
+                foreach ($plan as $array) {
+                    $month = $array['month'];
+                    $weeks = $array['weeks'];
+
+                     $id = Plan::insertGetId([
+                        'member_id' => $member_id,
+                        'year' => $plan_year,
+                        'month' => $month,
+                    ]);
+                    if($id) {
+                        $plan_detail_ins = [];
+                        foreach ($weeks as $item) {
+                            $plan_week = [];
+                            $plan_week['plan_id'] = $id;
+                            $plan_week['week'] = $item['week'];
+                            $plan_week['value'] = 0;
+                            $plan_week['value2'] = 0;
+                            if (isset($item['assign'])) {
+                                $plan_week['value2'] = $item['assign'];
+                            }
+                            if (isset($item['credit'])) {
+                                $plan_week['value'] = $item['credit'];
+                            }
+                            array_push($plan_detail_ins, $plan_week);
+                        }
+                        PlanDetail::insert($plan_detail_ins);
                     }
-                    PlanDetail::insert($plan_detail_ins);
                 }
             }
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => '',
+                'message' => $e->getMessage(),
             ]);
         }
         DB::commit();
@@ -198,10 +219,16 @@ class PlanController extends Controller
      * @return mixed
      */
     public function delete($member_id) {
+        $member_id = $this->request->get('member_id');
+        $year = $this->request->get('year');
+        $plan_year = Date('Y');
+        if ( ! empty($year) && is_numeric($year)) {
+            $plan_year = $year;
+        }
         DB::beginTransaction();
         try {
-            $del_detail = PlanDetail::deletePlanDetail($member_id);
-            $del_plan = Plan::deletePlan($member_id);
+            $del_detail = PlanDetail::deletePlanDetail($member_id, $plan_year);
+            $del_plan = Plan::deletePlan($member_id, $plan_year);
             if ( ! $del_detail || ! $del_plan) {
                 throw new Exception('Cannot delete!');
             }

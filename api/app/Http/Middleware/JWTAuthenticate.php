@@ -5,8 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Exception;
 use App\User;
-use Firebase\JWT\JWT;
-use Firebase\JWT\ExpiredException;
+use App\Http\Controllers\Common\Utils;
 
 class JWTAuthenticate
 {
@@ -30,26 +29,22 @@ class JWTAuthenticate
             ], 400);
         }
 
-        try {
-            $credenticals = JWT::decode($token, env('JWT_SECRET'), ['HS256']);
-        } catch (ExpiredException $e) {
-            list($header, $payload, $signature) = explode(".", $token);
-            $expired_info = json_decode(base64_decode($payload));
-
+        $check = Utils::JWTCheck($token);
+        if ($check == config('rptm.error.auth.token_expired.code')) {
             return response()->json([
                 'success' => false,
                 'error_code' => config('rptm.error.auth.token_expired.code'),
                 'message' => config('rptm.error.auth.token_expired.message'),
-            ], 400);
-        } catch (Exception $e) {
+            ], 401);
+        } else if ($check == config('rptm.error.auth.token_invalid.code')) {
             return response()->json([
                 'success' => false,
                 'error_code' => config('rptm.error.auth.token_invalid.code'),
                 'message' => config('rptm.error.auth.token_invalid.message'),
-            ], 400);
+            ], 401);
         }
 
-        $user = User::where(['user_name' => $credenticals->aud, 'del_flg' => 0])->first();
+        $user = User::where(['user_name' => $check, 'del_flg' => 0])->first();
         if (!$user) {
             return response()->json([
                 'success' => false,

@@ -9,6 +9,7 @@ use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Firebase\JWT\ExpiredException;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Common\Utils;
 
 class AuthController extends Controller
 {
@@ -47,7 +48,7 @@ class AuthController extends Controller
      * @param  User   $user
      * @return mixed
      */
-    public function authenticate(User $user) {
+    protected function authenticate(User $user) {
         return response()->json([
             'success' => true,
             'error_code' => 0,
@@ -100,5 +101,31 @@ class AuthController extends Controller
         }
 
         return $this->authenticate($user);
+    }
+
+    public function verify() {
+        $token = $this->request->header('Authorization');
+        $check = Utils::JWTCheck($token);
+        if ($check == 0) {
+            return response()->json([
+                'success' => true,
+                'error_code' => 0,
+                'message' => '',
+            ], 200);
+        }
+        if ($check == config('rptm.error.auth.token_expired.code')) {
+            return response()->json([
+                'success' => false,
+                'error_code' => config('rptm.error.auth.token_expired.code'),
+                'message' => config('rptm.error.auth.token_expired.message'),
+            ], 401);
+        }
+        if ($check == config('rptm.error.auth.token_invalid.code')) {
+            return response()->json([
+                'success' => false,
+                'error_code' => config('rptm.error.auth.token_invalid.code'),
+                'message' => config('rptm.error.auth.token_invalid.message'),
+            ], 401);
+        }
     }
 }

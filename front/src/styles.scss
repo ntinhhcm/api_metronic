@@ -1,0 +1,62 @@
+/* You can add global styles to this file, and also import other style files */
+@media (min-width: 992px) {
+	.modal .modal-content {
+		display: inline-table;
+	}
+}
+
+#edit_modal {
+	form {
+		td {
+			label {
+				width: 30px;
+				padding: 5px 1px;
+			}
+		}
+		button[class$="-fast-input"] {
+			width: 30px;
+			height: 25px;
+			padding: 5px 1px;
+		}
+	}
+}
+
+.bootstrap-tagsinput {
+    display: block;
+    width: 100%;
+    padding: 0.65rem 2.8rem!important;
+    font-family: sans-serif, Arial;
+    font-size: 1rem;
+    line-height: 1.25;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ebedf2!important;
+    border-radius: 0.25rem!important;
+    -webkit-transition: border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    box-shadow: unset!important;
+}
+
+.label-info {
+    background-color: #5bc0de;
+}
+
+.label {
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 80%;
+    font-weight: 700;
+    line-height: 2;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+
+.bootstrap-tagsinput {
+    width: 100%;
+}

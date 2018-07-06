@@ -41,28 +41,24 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
                 ->leftJoin('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
                 ->select(['plan.member_id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2']);
 
-        if (isset($search['badge_id'])) {
-            $query->where('member.badge_id', '=', $search['badge_id']);
-        }
-        if (isset($search['member_name'])) {
-            $query->where('member.member_name', 'like', '%' . $search['member_name'] . '%');
-        }
         if (isset($search['value'])) {
             $cond = '=';
             if ($search['value'] > 0) {
                 $cond = '>';
                 $search['value'] = 0;
+            } else if ($search['value'] < 0) {
+                $cond = '<';
+                $search['value'] = 0;
             }
             $query->where('plan_detail.value', $cond, $search['value']);
         }
-        if (isset($search['value2'])) {
-            $cond = '=';
-            if ($search['value2'] > 0) {
-                $cond = '>';
-                $search['value2'] = 0;
-            }
-            $query->where('plan_detail.value', $cond, $search['value2']);
+
+        $year = date('Y');
+        if (isset($search['plan_year'])) {
+            $year =$search['plan_year'];
         }
+        $query->where('plan.year', '=', $year);
+
         if (isset($search['member_id'])) {
             $query->whereIn('plan.member_id', $search['member_id']);
         }
@@ -74,11 +70,13 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
      * @param  String $badge_id
      * @return array
      */
-    public static function getPlan($member_id) {
+    public static function getPlan($member_id, $year) {
         return DB::table('plan')
                 ->leftJoin('member', 'member.id', '=', 'plan.member_id')
                 ->leftJoin('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
-                ->select(['member.badge_id',
+                ->select([
+                    'member.id as member_id',
+                    'member.badge_id',
                     'member.member_name',
                     'plan.id',
                     'plan.year',
@@ -89,6 +87,7 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
                     'plan_detail.value2',
                 ])
                 ->where('member.id', '=', $member_id)
+                ->where('plan.year', '=', $year)
                 ->get();
     }
 
@@ -96,10 +95,11 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
 
     }
 
-    public static function deletePlan($member_id) {
+    public static function deletePlan($member_id, $year) {
         return DB::table('plan')
             ->leftJoin('member', 'member.id', '=', 'plan.member_id')
             ->where('member.id', '=', $member_id)
+            ->where('plan.year', '=', $year)
             ->delete();
     }
 

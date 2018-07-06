@@ -1,0 +1,110 @@
+<!-- BEGIN: Subheader -->
+<div class="m-subheader" appunwraptag="">
+	<div class="d-flex align-items-center">
+		<div class="mr-auto">
+			<h3 class="m-subheader__title m-subheader__title--separator">
+				Planning tool
+			</h3>
+			<ul class="m-subheader__breadcrumbs m-nav m-nav--inline">
+				<li class="m-nav__item m-nav__item--home">
+					<a href="#" class="m-nav__link m-nav__link--icon">
+						<i class="m-nav__link-icon la la-home"></i>
+					</a>
+				</li>
+				<li class="m-nav__separator">
+					-
+				</li>
+				<li class="m-nav__item">
+					<a href="/index" class="m-nav__link">
+						<span class="m-nav__link-text">
+							Dashboard
+						</span>
+					</a>
+				</li>
+				<li class="m-nav__separator">
+					-
+				</li>
+				<li class="m-nav__item">
+					<a href="/plan" class="m-nav__link">
+						<span class="m-nav__link-text">
+							Planning tool
+						</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<!-- END: Subheader -->
+<div class="m-content">
+	<div class="m-portlet m-portlet--mobile">
+		<div class="m-portlet__body">
+			<!--begin: Search Form -->
+			<form class="m-form m-form--fit m--margin-bottom-20">
+				<div class="row m--margin-bottom-20">
+					<div class="col-lg-3 m--margin-bottom-10-tablet-and-mobile">
+						<label>
+							BadgeID:
+						</label>
+						<div class="m-input-icon m-input-icon--left">
+							<input type="text" class="form-control m-input" placeholder="Search..." id="badge_id" name="badge_id" data-col-index="0">
+							<span class="m-input-icon__icon m-input-icon__icon--left">
+								<span>
+									<i class="la la-barcode"></i>
+								</span>
+							</span>
+						</div>
+					</div>
+					<div class="col-lg-3 m--margin-bottom-10-tablet-and-mobile">
+						<label>
+							Name:
+						</label>
+						<div id="test" class="m-input-icon m-input-icon--left">
+							<input type="text" class="form-control m-input" id="member_name" name="member_name" data-col-index="1" data-role="tagsinput">
+							<span class="m-input-icon__icon m-input-icon__icon--left">
+								<span>
+									<i class="la la-users"></i>
+								</span>
+							</span>
+						</div>
+					</div>
+					<div class="col-lg-3 m--margin-bottom-10-tablet-and-mobile">
+						<label>
+							Plan year:
+						</label>
+						<div class="m-input-icon m-input-icon--left">
+							<select class="form-control m-select2" id="plan_year" name="plan_year">
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="m-separator m-separator--md m-separator--dashed"></div>
+				<div class="row">
+					<div class="col-lg-12">
+						<button class="btn btn-brand m-btn m-btn--icon" id="m_search" (click)="search()">
+							<span>
+								<i class="la la-search"></i>
+								<span>
+									Search
+								</span>
+							</span>
+						</button>
+						&nbsp;&nbsp;
+						<button class="btn btn-secondary m-btn m-btn--icon" id="m_reset" onclick="resetForm();">
+							<span>
+								<i class="la la-close"></i>
+								<span>
+									Reset
+								</span>
+							</span>
+						</button>
+					</div>
+				</div>
+			</form>
+			<!--end: Search Form -->
+			<!--begin: Datatable -->
+			<div class="m_datatable" id="plan_member"></div>
+			<!--end: Datatable -->
+		</div>
+	</div>
+</div>

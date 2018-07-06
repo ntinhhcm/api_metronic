@@ -49,5 +49,3 @@ class PlanDetailTableSeeder extends Seeder
         factory(App\PlanDetail::class, 4)->create();
     }
 }
-
-
