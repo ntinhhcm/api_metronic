@@ -5,17 +5,23 @@ var planMember = function () {
 	//== Private functions
 
 	var __template = function(row, index) {
-		var credit = row['credit_' + index];
-		var assign = row['assign_' + index];
-		var credit_c = row['credit_c' + index];
-		var assign_c = row['assign_c' + index];
+		var credit = row['credit' + index].split('_');
+		var assign = row['assign' + index].split('_');
+		color_c = credit[0];
+		color_a = assign[0];
 
-		var __template_t_c = '<b>' + credit + '</b>';
-		var __template_t_a = '<b>' + assign + '</b>';
+		credit_ = credit[1];
+		assign_ = assign[1];
+
+		project_c = credit[2];
+		project_a = assign[2];
+
+		var __template_t_c = '<b>Project: </b>' +  project_c + ' <br/><b>' + credit_ + '</b>';
+		var __template_t_a = '<b>Project: </b>' +  project_a + ' <br/><b>' + assign_ + '</b>';
 
 		return '\
-			<div data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_c + '" data-placement="right" data="' + row.member_id + '" style="background: ' + credit_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
-			<div data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_a + '" data-placement="right" data="' + row.member_id + '" style="background: ' + assign_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
+			<div class="credit" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_c + '" data-placement="right" data="' + row.member_id + '" style="background: ' + color_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
+			<div class="assign" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_a + '" data-placement="right" data="' + row.member_id + '" style="background: ' + color_a + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
 		';
 	};
 
@@ -492,6 +498,19 @@ var planMember = function () {
 						headers: {
 							'Authorization': token
 						},
+						map: function(raw) {
+							// Set _year global
+							if (typeof raw.meta.year != 'undefined') {
+								$('input[name="_year"]').val(raw.meta.year);
+							} else {
+								$('input[name="_year"]').val((new Date).getFullYear());
+							}
+							var dataSet = raw;
+							if (typeof raw.data !== 'undefined') {
+								 dataSet = raw.data;
+							}
+							return dataSet;
+						}
 					}
 				},
 
@@ -526,29 +545,44 @@ var planMember = function () {
 				callback: function() {
 					$('.m_datatable a.edit').on('click', function() {
 						var member_id = $(this).attr('data');
-						var plan_year = $('#plan_year').val();
 						var v_member_name = $(this).next('input[name="name_member"]').val();
 						var v_badge_id = $(this).next().next('input[name="badgeid_member"]').val();
-						plan_edit.edit(member_id, plan_year, v_member_name, v_badge_id );
+						plan_edit.edit(member_id, v_member_name, v_badge_id );
 					});
 					$('.m_datatable a.delete').on('click', function() {
 						var member_id = $(this).attr('data');
 						plan_edit.delete(member_id);
 					});
+
+					// Init tooltip of cell on table
 					mApp.initTooltips();
+					// Fix fall scroll block right of table
 					left_width = $('.m-datatable thead').find('.m-datatable__lock--scroll').width() - 20;
 					$('.m-datatable').find('.m-datatable__lock--scroll').css('width', left_width);
+
+					$('.credit').on('click', function() {
+						var member_id = $(this).attr('data');
+						var valcolumn = $(this).parent().parent().attr('data-field');
+						plan_edit.call_modal_add(member_id, valcolumn, 'credit');
+					});
+					$('.assign').on('click', function() {
+						var member_id = $(this).attr('data');
+						var valcolumn = $(this).parent().parent().attr('data-field');
+						plan_edit.call_modal_add(member_id, valcolumn, 'assign');
+					});
 				}
 			}
 
 			// Search plan
 			if (search) {
 				badge_id = $('input[name="badge_id"]').val();
-				member_name = $('input[name="member_name"]').val();
+				project = $('input[name="project"]').val();
+				member_email = $('input[name="member_email"]').val();
 				plan_year = $('#plan_year').val();
 
 				datatable.setDataSourceParam('badge_id', badge_id);
-				datatable.setDataSourceParam('member_name', member_name);
+				datatable.setDataSourceParam('project', project);
+				datatable.setDataSourceParam('member_email', member_email);
 				datatable.setDataSourceParam('plan_year', plan_year);
 				
 				datatable.reload();
@@ -570,9 +604,4 @@ var planMember = function () {
 
 function loadPlan(url, token, search) {
 	planMember.init(url, token, search);
-}
-
-function resetForm() {
-	$('form')[0].reset();
-	$('#plan_year').val((new Date).getFullYear()).trigger('change');
 }

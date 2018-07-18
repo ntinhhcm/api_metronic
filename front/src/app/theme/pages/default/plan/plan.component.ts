@@ -5,6 +5,7 @@ import { environment as env} from '../../../../../environments/environment'
 
 declare function loadPlan(url: string, token: string, search: boolean): any;
 declare function initEditPlan(apiURL: string, token: string);
+declare function initSearch(apiURL: string, token: string);
 @Component({
   selector: "app-plan",
   templateUrl: "./plan.component.html",
@@ -16,6 +17,7 @@ export class PlanComponent implements OnInit, AfterViewInit {
 
   private url = '';
   private token = '';
+  private projects: any = [];
 
   @ViewChildren('allInput') allInput;
 
@@ -31,8 +33,9 @@ export class PlanComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit()  {
-    this._script.loadScripts('app-plan', ['assets/plan/plan_edit.js', 'assets/plan/left.js']);
+    this._script.loadScripts('app-plan', ['assets/plan/search.js', 'assets/plan/plan_edit.js', 'assets/plan/left.js']);
     this.loadData();
+    initSearch(this.url + '/plan', this.token);
     initEditPlan(this.url, this.token);
   }
 
@@ -41,6 +44,6 @@ export class PlanComponent implements OnInit, AfterViewInit {
   }
 
   search() {
-    loadPlan(this.url + '/plan', this.url, true);
+    loadPlan(this.url + '/plan', this.token, true);
   }
 }

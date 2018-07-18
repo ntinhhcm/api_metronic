@@ -16,7 +16,49 @@
 </div>
 <!-- END: Subheader -->
 <div class="m-content">
-    <div>
-        Dashboard
+    <div class="row">
+        <div class="col-lg-12">
+            <!--begin::Portlet-->
+            <div class="m-portlet m-portlet--tab">
+                <div class="m-portlet__head">
+                    <div class="m-portlet__head-caption">
+                        <div class="m-portlet__head-title">
+                            <span class="m-portlet__head-icon m--hide">
+                                <i class="la la-gear"></i>
+                            </span>
+                            <h3 class="m-portlet__head-text">
+                                Assign Backup
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <form #filterForm class="m-form m-form--fit m-form--label-align-right">
+                    <div class="m-portlet__body">
+                        <div class="form-group m-form__group row">
+                            <label class="col-sm-1 col-form-label">
+                                Month:
+                            </label>
+                            <div class="col-xs-6 col-md-2">
+                                <input id="month" type="text" class="form-control" [(ngModel)]="month" name="month"  type="text">
+                            </div>
+                            <label class="col-sm-1 col-form-label">
+                                Year:
+                            </label>
+                            <div class="col-xs-6 col-md-2">
+                                <input id="year" type="text" [(ngModel)]="year" class="form-control" name="year"  type="text">
+                            </div>
+                            <div class="col-xs-6 col-md-2">
+                                <button class="btn btn-brand" (click)="filter(filterForm)">
+                                    Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="m-portlet__body">
+                    <div id="m_amcharts_1" style="height: 500px;"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
