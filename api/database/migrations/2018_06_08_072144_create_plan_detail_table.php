@@ -19,10 +19,8 @@ class CreatePlanDetailTable extends Migration
             $table->float('value')->default(0);
             $table->float('value2')->default(0);
             $table->tinyInteger('week')->nullable(false);
-            $table->string('assign_project');
-            $table->string('credit_project');
-            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->string('note_project');
+            $table->timestamps();
 
             $table->foreign('plan_id')->references('id')->on('plan');
             $table->unique(array('plan_id', 'week'));

@@ -19,8 +19,7 @@ class CreateUserLogTable extends Migration
             $table->string('user_ip');
             $table->string('action');
             $table->string('object');
-            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamps();
         });
     }
 

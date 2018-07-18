@@ -14,7 +14,7 @@
 $factory->define(App\User::class, function (Faker\Generator $faker) {
     return [
         'user_name' => $faker->username,
-        'user_email' => $faker->username,
+        'user_email' => $faker->email,
         'role' => ['admin', 'user'][rand(0,1)]
     ];
 });
@@ -23,7 +23,6 @@ $factory->define(App\Member::class, function (Faker\Generator $faker) {
     return [
         'badge_id' => rand(123400, 124000),
         'member_name' => $faker->name,
-        'member_email' => $faker->username . '@tma.com.vn',
     ];
 });
 

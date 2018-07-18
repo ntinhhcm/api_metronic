@@ -18,8 +18,7 @@ class CreateUserTable extends Migration
             $table->string('user_name');
             $table->string('user_email');
             $table->string('role');
-            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamps();
             $table->tinyInteger('del_flg')->default('0');
         });
     }

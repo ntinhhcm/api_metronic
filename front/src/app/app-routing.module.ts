@@ -1,28 +1,15 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes, CanActivate } from '@angular/router';
-import { AuthService as Auth } from './services/auth.service';
-import { LoginComponent } from './login/login.component';
-import { HomeComponent } from './home/home.component';
-import { PlanComponent } from './plan/plan.component';
-import { EditComponent } from './edit/edit.component';
-import { NotfoundComponent } from './error/notfound/notfound.component';
+import { Routes, RouterModule } from '@angular/router';
+import { LogoutComponent } from "./auth/logout/logout.component";
 
 const routes: Routes = [
-	{ path: '', redirectTo: '/home', pathMatch: 'full' },
-  { path: 'edit', component: EditComponent },
-	{ path: 'login', component: LoginComponent },
-	{ path: 'home', component: HomeComponent, canActivate: [Auth] },
-  { path: 'plan', component: PlanComponent, canActivate: [Auth] },
-  { path: 'notfound', component: NotfoundComponent },
-	{ path: '**', redirectTo: '/notfound' },
+    { path: 'login', loadChildren: './auth/auth.module#AuthModule' },
+    { path: 'logout', component: LogoutComponent },
+    { path: '', redirectTo: 'index', pathMatch: 'full' },
 ];
 
 @NgModule({
-  imports: [
-    RouterModule.forRoot(routes, {useHash: true})
-  ],
-  exports: [ RouterModule ],
-  providers: [ Auth],
-  declarations: []
+    imports: [RouterModule.forRoot(routes)],
+    exports: [RouterModule]
 })
 export class AppRoutingModule { }

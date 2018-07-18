@@ -39,7 +39,7 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
     public static function list($search = []) {
         $query = DB::table('plan')
                 ->leftJoin('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
-                ->select(['plan.member_id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2', 'plan_detail.assign_project', 'plan_detail.credit_project']);
+                ->select(['plan.member_id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2']);
 
         if (isset($search['value'])) {
             $cond = '=';
@@ -53,7 +53,11 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
             $query->where('plan_detail.value', $cond, $search['value']);
         }
 
-        $query->where('plan.year', '=', $search['plan_year']);
+        $year = date('Y');
+        if (isset($search['plan_year'])) {
+            $year =$search['plan_year'];
+        }
+        $query->where('plan.year', '=', $year);
 
         if (isset($search['member_id'])) {
             $query->whereIn('plan.member_id', $search['member_id']);
@@ -81,20 +85,9 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
                     'plan_detail.week',
                     'plan_detail.value',
                     'plan_detail.value2',
-                    'plan_detail.credit_project',
-                    'plan_detail.assign_project',
                 ])
                 ->where('member.id', '=', $member_id)
                 ->where('plan.year', '=', $year)
-                ->get();
-    }
-
-    public static function getProject() {
-        return DB::table('project')
-                ->select([
-                    'id as project_id',
-                    'project_name',
-                ])
                 ->get();
     }
 
@@ -115,28 +108,9 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
             return '#8e8e8e';
         } else if ($value == 0) {
             return '#ff0000';
+
         } else if ($value > 0) {
             return '#4eff04';
         }
-    }
-
-    public static function assignCount($cond = [], $type = 'month') {
-        $query = DB::table('plan')
-            ->join('plan_detail', 'plan_detail.plan_id', '=', 'plan.id');
-
-        if ($type == 'week') {
-            $query->select('plan_detail.week', DB::raw('sum(value2) as assign'))
-                ->where('plan.month', '=', $cond['month'])
-                ->where('plan.year', '=', $cond['year'])
-                ->where('value2', '>', 0)
-                ->groupBy('plan_detail.week');
-        } else {
-            $query->select('plan.month', DB::raw('sum(value2) as assign'))
-                ->where('plan.year', '=', $cond['year'])
-                ->where('value2', '>', 0)
-                ->groupBy('plan.month');
-        }
-
-        return $query->get();
     }
 }
