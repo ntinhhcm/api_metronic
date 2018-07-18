@@ -293,9 +293,9 @@ var plan_edit = function() {
                         break;
                     default:
                 }
+                location.reload();
             }
         }
-        location.reload();
     }
 
     var Plugin = {
@@ -483,17 +483,19 @@ var plan_edit = function() {
                 Plugin.edit_submit();
             });
             // On click radio button
-            $('#' + e_modal_id + ' input[type="radio"]').on('click', function() {
+/*            $('#' + e_modal_id + ' input[type="radio"]').on('click', function() {
                 var parent = $(this).parent().parent();
-                var hidden = parent.find('input[type="hidden"]');
+                var hidden = parent.find('input[type="hidden"][name^="assign-"], input[type="hidden"][name^="credit-"]');
                 hidden.val($(this).val());
-            });
-            $('#' + e_modal_id + ' label').on('click', function() {
+            });*/
+            $('#' + e_modal_id + ' form label').on('click', function() {
                 var parent = $(this).parent();
                 var radio = $(this).find('[type="radio"]');
-                radio.prop('checked', true);
-                var hidden = parent.find('input[type="hidden"]');
-                hidden.val(radio.val());
+                if (radio.length > 0) {
+                    radio.prop('checked', true);
+                    var hidden = parent.find('input[type="hidden"][name^="assign-"], input[type="hidden"][name^="credit-"]');
+                    hidden.val(radio.val());
+                }
             });
             $('#' + e_modal_id + ' button[class$="-fast-input"]').click(function() {
 
