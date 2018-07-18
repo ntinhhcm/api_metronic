@@ -1,30 +1,32 @@
-import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { ThemeComponent } from './theme/theme.component';
-import { LayoutModule } from './theme/layouts/layout.module';
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-
-import { AppRoutingModule } from './app-routing.module';
+import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule, ReactiveFormsModule }    from '@angular/forms';
+import { HttpClientModule }    from '@angular/common/http';
 import { AppComponent } from './app.component';
-import { ScriptLoaderService } from "./_services/script-loader.service";
-import { ThemeRoutingModule } from "./theme/theme-routing.module";
-import { AuthModule } from "./auth/auth.module";
-import { PlanService } from "./_services/plan.service";
+import { LoginComponent } from './login/login.component';
+import { HomeComponent } from './home/home.component';
+import { PlanComponent } from './plan/plan.component';
+import { AppRoutingModule } from './app-routing.module';
+import { EditComponent } from './edit/edit.component';
+import { NotfoundComponent } from './error/notfound/notfound.component';
 
 @NgModule({
-    declarations: [
-        ThemeComponent,
-        AppComponent,
-    ],
-    imports: [
-        LayoutModule,
-        BrowserModule,
-        BrowserAnimationsModule,
-        AppRoutingModule,
-        ThemeRoutingModule,
-        AuthModule,
-    ],
-    providers: [ScriptLoaderService, PlanService],
-    bootstrap: [AppComponent]
+	imports: [
+		BrowserModule,
+		FormsModule,
+		HttpClientModule,
+		AppRoutingModule,
+		ReactiveFormsModule
+	],
+	declarations: [
+		AppComponent,
+		LoginComponent,
+		HomeComponent,
+		PlanComponent,
+		NotfoundComponent,
+		EditComponent
+	],
+	providers: [],
+	bootstrap: [AppComponent]
 })
 export class AppModule { }

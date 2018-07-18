@@ -18,7 +18,9 @@ class CreateMemberTable extends Migration
             $table->integer('badge_id');
             $table->string('member_name');
             $table->string('member_email');
-            $table->timestamps();
+            $table->tinyInteger('available')->default(1);
+            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
             $table->tinyInteger('del_flg')->default('0');
         });
     }

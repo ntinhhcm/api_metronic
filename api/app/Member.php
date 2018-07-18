@@ -27,13 +27,19 @@ class Member extends Model implements AuthenticatableContract, AuthorizableContr
     }
 
     public static function getList($condition = [], $order = [], $limit = -1, $offset = -1) {
-        $query = DB::table('member')->select(['id', 'badge_id', 'member_name']);
+        $query = DB::table('member')->select(['member.id', 'badge_id', 'member_name']);
+
+        if (isset($condition['project'])) {
+            $query->join('project_member', 'project_member.member_id', '=', 'member.id')
+                ->join('project', 'project.id', '=', 'project_member.project_id')
+                ->whereIn('project_name', $condition['project']);
+        }
 
         if (isset($condition['badge_id'])) {
-            $query->where('badge_id', 'like', $condition['badge_id'] . '%');
+            $query->whereIn('badge_id', $condition['badge_id']);
         }
-        if (isset($condition['member_name'])) {
-            $query->whereIn('member_name', $condition['member_name']);
+        if (isset($condition['member_email'])) {
+            $query->whereIn('member_email', $condition['member_email']);
         }
         if (isset($order['field']) && isset($order['type'])) {
             $query->orderBy($order['field'], $order['type']);

@@ -32,12 +32,24 @@ class PlanController extends Controller
         // Get condition to search
         $search_cond = [];
         if ($this->request->get('badge_id') != null && $this->request->get('badge_id') != '') {
-            $search_cond['badge_id'] = $this->request->get('badge_id');
-        }
-        if ($this->request->get('member_name') != null && $this->request->get('member_name') != '') {
-            $search_cond['member_name'] = explode(',', $this->request->get('member_name'));
-            array_walk($search_cond['member_name'], function(&$value) {
+            $search_cond['badge_id'] = explode(',', $this->request->get('badge_id'));
+            array_walk($search_cond['badge_id'], function(&$value) {
                 $value = trim($value);
+            });
+        }
+        if ($this->request->get('project') != null && $this->request->get('project') != '') {
+            $search_cond['project'] = explode(',', $this->request->get('project'));
+            array_walk($search_cond['project'], function(&$value) {
+                $value = trim($value);
+            });
+        }
+        if ($this->request->get('member_email') != null && $this->request->get('member_email') != '') {
+            $search_cond['member_email'] = explode(',', $this->request->get('member_email'));
+            array_walk($search_cond['member_email'], function(&$value) {
+                $value = trim($value);
+                if (strpos($value, '@') == false) {
+                    $value .= '@tma.com.vn';
+                }
             });
         }
 
@@ -71,6 +83,7 @@ class PlanController extends Controller
         }
         $search_cond['member_id'] = $member_ids;
 
+        $search_cond['plan_year'] = Date('Y');
         if ( ! empty($this->request->get('plan_year'))) {
             $search_cond['plan_year'] = $this->request->get('plan_year');
         }
@@ -89,10 +102,8 @@ class PlanController extends Controller
             ];
 
             for ($i = 1; $i <= 48; $i++) {
-                $result['credit_c' . $i] = Plan::getStatusColor();
-                $result['assign_c' . $i] = Plan::getStatusColor();
-                $result['credit_' . $i] = 0;
-                $result['assign_' . $i] = 0;
+                $result['credit' . $i] = Plan::getStatusColor() . '_0_';
+                $result['assign' . $i] = Plan::getStatusColor() . '_0_';
             }
 
             foreach ($plans as $key => $plan) {
@@ -100,10 +111,8 @@ class PlanController extends Controller
                     $month = $plan->month;
                     $week = $plan->week;
                     $week_of_month = ($month - 1) * 4 + $week;
-                    $result['credit_c' . $week_of_month] = Plan::getStatusColor($plan->value);
-                    $result['assign_c' . $week_of_month] = Plan::getStatusColor($plan->value2);
-                    $result['credit_' . $week_of_month] = $plan->value;
-                    $result['assign_' . $week_of_month] = $plan->value2;
+                    $result['credit' . $week_of_month] = Plan::getStatusColor($plan->value) . '_' . $plan->value . '_' . $plan->credit_project;
+                    $result['assign' . $week_of_month] = Plan::getStatusColor($plan->value2) . '_' . $plan->value2 . '_' . $plan->assign_project;
                     unset($plans[$key]);
                 }
             }
@@ -120,6 +129,7 @@ class PlanController extends Controller
                 'total' => $total,
                 'sort' => $sort['type'],
                 'field' => $sort['field'],
+                'year' => $search_cond['plan_year'],
             ],
             'data' => $results,
         ]);
@@ -193,6 +203,8 @@ class PlanController extends Controller
                             if (isset($item['credit'])) {
                                 $plan_week['value'] = $item['credit'];
                             }
+                            $plan_week['assign_project'] = $item['assign_project'];
+                            $plan_week['credit_project'] = $item['credit_project'];
                             array_push($plan_detail_ins, $plan_week);
                         }
                         PlanDetail::insert($plan_detail_ins);
@@ -252,5 +264,129 @@ class PlanController extends Controller
      */
     public function export() {
         echo $this->request->get('id');
+    }
+
+    public function update() {
+        if($this->request->isMethod('get')) {
+            $project_list = Plan::getProject();
+            return response()->json([
+                'success' => true,
+                'message' => '',
+                'total_items' =>count($project_list),
+                'items' => $project_list,
+            ]);
+        }
+
+        DB::beginTransaction();
+        try {
+            $member_id = $this->request->get('p_member_id');
+            $year = $this->request->get('p_year');
+            $month = $this->request->get('p_month');
+            $week = $this->request->get('p_week');
+            $project = $this->request->get('select_project');
+            $type = $this->request->get('p_type');
+
+            if ($type != 'credit' && $type != 'assign') {
+                $type = 'credit';
+            }
+
+            if ((is_null($member_id) || empty($member_id))) {
+                throw new Exception("Member id is empty!");
+            }
+            if ((is_null($project) || empty($project))) {
+                throw new Exception("Project is empty!");
+            }
+
+            $plan_id = Plan::select('id')->where(['member_id' => $member_id, 'year' => $year, 'month' => $month])->get();
+            $id = '';
+            if ($plan_id->count() == 1) {
+                $id = $plan_id[0]['id'];
+            } else {
+                throw new Exception("Cannot create plan for member " + $member_id);
+            }
+
+            $project_field = $type . '_project';
+            $project_value = implode(',', $project);
+            $update_status = PlanDetail::where('plan_id', '=', $id)->where('week', '=', $week)->update([$project_field => $project_value]);
+
+            if ($update_status == 0) {
+                throw new Exception("Add project fail");
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
+        DB::commit();
+        return response()->json([
+            'success' => true,
+            'message' => '',
+        ]);
+    }
+
+    /**
+     * Calculating the number of backup member in month or year - unit is week
+     * @return mix
+     */
+    public function assignCount() {
+        $type = 'week';
+        $cond = [];
+        // Init year and month if empty
+        $cond['year'] = Date('Y');
+        $cond['month'] = Date('n');
+
+        // View by month and year
+        if ( ! empty($this->request->get('month'))) {
+            $cond['month'] = $this->request->get('month');
+        }
+        if ( ! empty($this->request->get('year'))) {
+            $cond['year'] = $this->request->get('year');
+        }
+
+        // View by year
+        if (empty($this->request->get('month')) && ! empty($this->request->get('year'))) {
+            $type = 'month';
+            $cond['month'] = '';
+        }
+
+        // Count available member
+        $member_count = Member::where('available', '=', 1)->count();
+        // Get assgin count
+        $assigns = Plan::assignCount($cond, $type);
+        $results = [];
+
+        // Init results
+        if ($type == 'week') {
+            for ($i = 1; $i <= 4; $i++ ) {
+                $results[$i] = ['week' => $i, 'assign' => 100];
+            }
+        } else {
+            for ($i = 1; $i <= 12; $i++ ) {
+                $results[$i] = ['month' => $i, 'assign' => 100];
+            }
+        }
+
+        // Calculate backup
+        if($assigns->count() > 0) {
+            foreach ($assigns as $assign) {
+                $result = [];
+                if ($type == 'week') {
+                    $backup = ($member_count - $assign->assign) * 100 / $member_count;
+                    $results[$assign->week]['assign'] = $backup;
+                } else {
+                    $backup = ($member_count - $assign->assign / 4) * 100 / $member_count;
+                    $results[$assign->month]['assign'] = $backup;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'type' => $type,
+            'items' => array_values($results)
+        ]);
     }
 }
