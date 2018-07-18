@@ -374,10 +374,10 @@ class PlanController extends Controller
                 $result = [];
                 if ($type == 'week') {
                     $backup = ($member_count - $assign->assign) * 100 / $member_count;
-                    $results[$assign->week]['assign'] = $backup;
+                    $results[$assign->week]['assign'] = round($backup, 2);
                 } else {
                     $backup = ($member_count - $assign->assign / 4) * 100 / $member_count;
-                    $results[$assign->month]['assign'] = $backup;
+                    $results[$assign->month]['assign'] = round($backup, 2);
                 }
             }
         }
