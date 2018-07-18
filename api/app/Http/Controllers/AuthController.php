@@ -36,7 +36,7 @@ class AuthController extends Controller
             "iss" => "",
             "aud" => $user->user_name,
             "iat" => time(),
-            "exp" => time() + 60 * 60 * 3
+            "exp" => time() + 60 * 60 * 8 // expired time within 8 hours
         ];
 
         return JWT::encode($token, env('JWT_SECRET'));
