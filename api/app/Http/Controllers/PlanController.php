@@ -7,6 +7,7 @@ use Exception;
 use App\Plan;
 use App\PlanDetail;
 use App\Member;
+use App\MemberTracking;
 use DB;
 
 class PlanController extends Controller
@@ -101,9 +102,11 @@ class PlanController extends Controller
                 'member_name' => $member->member_name,
             ];
 
+            // Init return value
+            // Format reture value for credit and assign: [#color code][_][value|value2][_][project refer][_][plan detail id]
             for ($i = 1; $i <= 48; $i++) {
-                $result['credit' . $i] = Plan::getStatusColor() . '_0_';
-                $result['assign' . $i] = Plan::getStatusColor() . '_0_';
+                $result['credit' . $i] = Plan::getStatusColor() . '_0__';
+                $result['assign' . $i] = Plan::getStatusColor() . '_0__';
             }
 
             foreach ($plans as $key => $plan) {
@@ -111,8 +114,8 @@ class PlanController extends Controller
                     $month = $plan->month;
                     $week = $plan->week;
                     $week_of_month = ($month - 1) * 4 + $week;
-                    $result['credit' . $week_of_month] = Plan::getStatusColor($plan->value) . '_' . $plan->value . '_' . $plan->credit_project;
-                    $result['assign' . $week_of_month] = Plan::getStatusColor($plan->value2) . '_' . $plan->value2 . '_' . $plan->assign_project;
+                    $result['credit' . $week_of_month] = Plan::getStatusColor($plan->value) . '_' . $plan->value . '_' . $plan->credit_project . '_' . $plan->plan_detail_id;
+                    $result['assign' . $week_of_month] = Plan::getStatusColor($plan->value2) . '_' . $plan->value2 . '_' . $plan->assign_project . '_' . $plan->plan_detail_id;
                     unset($plans[$key]);
                 }
             }
@@ -160,7 +163,7 @@ class PlanController extends Controller
             ]);
         }
 
-        $plan = $this->request->get('plan');
+        $plans = $this->request->get('plans');
         $member_id = $this->request->get('member_id');
 
         // Checking member exists
@@ -172,44 +175,26 @@ class PlanController extends Controller
             ]);
         }
 
-        // Delete all plan and plan detail before insert or update
-        $this->delete($member_id);
-
-        DB::beginTransaction();
-
         try {
-            $month_check = [];
-            if($plan) {
-                foreach ($plan as $array) {
-                    $month = $array['month'];
-                    $weeks = $array['weeks'];
+            if($plans) {
+                DB::transaction(function() use ($plans) {
+                    foreach ($plans as $plan_detail) {
+                        $id = $plan_detail['id'];
+                        $assign = $plan_detail['assign'];
+                        $credit = $plan_detail['credit'];
+                        $assign_project = $plan_detail['assign_project'];
+                        $credit_project = $plan_detail['credit_project'];
 
-                     $id = Plan::insertGetId([
-                        'member_id' => $member_id,
-                        'year' => $plan_year,
-                        'month' => $month,
-                    ]);
-                    if($id) {
-                        $plan_detail_ins = [];
-                        foreach ($weeks as $item) {
-                            $plan_week = [];
-                            $plan_week['plan_id'] = $id;
-                            $plan_week['week'] = $item['week'];
-                            $plan_week['value'] = 0;
-                            $plan_week['value2'] = 0;
-                            if (isset($item['assign'])) {
-                                $plan_week['value2'] = $item['assign'];
-                            }
-                            if (isset($item['credit'])) {
-                                $plan_week['value'] = $item['credit'];
-                            }
-                            $plan_week['assign_project'] = $item['assign_project'];
-                            $plan_week['credit_project'] = $item['credit_project'];
-                            array_push($plan_detail_ins, $plan_week);
-                        }
-                        PlanDetail::insert($plan_detail_ins);
+                        PlanDetail::where('id', '=', $id)
+                            ->update([
+                                'value' => $credit,
+                                'value2' => $assign,
+                                'assign_project' => $assign_project,
+                                'credit_project' => $credit_project,
+                            ]);
                     }
-                }
+                });
+                DB::commit();
             }
         } catch (Exception $e) {
             DB::rollBack();
@@ -218,7 +203,6 @@ class PlanController extends Controller
                 'message' => $e->getMessage(),
             ]);
         }
-        DB::commit();
         return response()->json([
             'success' => true,
             'message' => '',
@@ -279,39 +263,26 @@ class PlanController extends Controller
 
         DB::beginTransaction();
         try {
-            $member_id = $this->request->get('p_member_id');
-            $year = $this->request->get('p_year');
-            $month = $this->request->get('p_month');
-            $week = $this->request->get('p_week');
+            $plan_detail_id = $this->request->get('plan_detail_id');
             $project = $this->request->get('select_project');
             $type = $this->request->get('p_type');
 
-            if ($type != 'credit' && $type != 'assign') {
-                $type = 'credit';
-            }
-
-            if ((is_null($member_id) || empty($member_id))) {
+            if ((is_null($plan_detail_id) || empty($plan_detail_id))) {
                 throw new Exception("Member id is empty!");
             }
             if ((is_null($project) || empty($project))) {
                 throw new Exception("Project is empty!");
             }
 
-            $plan_id = Plan::select('id')->where(['member_id' => $member_id, 'year' => $year, 'month' => $month])->get();
-            $id = '';
-            if ($plan_id->count() == 1) {
-                $id = $plan_id[0]['id'];
-            } else {
-                throw new Exception("Cannot create plan for member " + $member_id);
+            $project_field = 'credit_project';
+            if ($type == 'assign') {
+                $project_field = 'assign_project';
             }
 
-            $project_field = $type . '_project';
-            $project_value = implode(',', $project);
-            $update_status = PlanDetail::where('plan_id', '=', $id)->where('week', '=', $week)->update([$project_field => $project_value]);
+            $plan_detail = PlanDetail::find($plan_detail_id);
+            $plan_detail->$project_field = implode(',', $project);
+            $plan_detail->save();
 
-            if ($update_status == 0) {
-                throw new Exception("Add project fail");
-            }
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -336,6 +307,8 @@ class PlanController extends Controller
         // Init year and month if empty
         $cond['year'] = Date('Y');
         $cond['month'] = Date('n');
+        $cond['c_year'] = Date('Y');
+        $cond['c_month'] = Date('n');
 
         // View by month and year
         if ( ! empty($this->request->get('month'))) {
@@ -344,40 +317,66 @@ class PlanController extends Controller
         if ( ! empty($this->request->get('year'))) {
             $cond['year'] = $this->request->get('year');
         }
+        if ( ! empty($this->request->get('c_month'))) {
+            $cond['c_month'] = $this->request->get('c_month');
+        }
+        if ( ! empty($this->request->get('c_year'))) {
+            $cond['c_year'] = $this->request->get('c_year');
+        }
 
         // View by year
         if (empty($this->request->get('month')) && ! empty($this->request->get('year'))) {
             $type = 'month';
             $cond['month'] = '';
+            $cond['c_month'] = '';
         }
 
         // Count available member
-        $member_count = Member::where('available', '=', 1)->count();
-        // Get assgin count
-        $assigns = Plan::assignCount($cond, $type);
-        $results = [];
+        $member_counts = MemberTracking::getTracking($cond, $type);
 
         // Init results
         if ($type == 'week') {
             for ($i = 1; $i <= 4; $i++ ) {
-                $results[$i] = ['week' => $i, 'assign' => 100];
+                $results[$i] = ['week' => $i, 'quantity1' => 0, 'quantity2' => 0, 'backup1' => 0, 'backup2' => 0];
             }
         } else {
             for ($i = 1; $i <= 12; $i++ ) {
-                $results[$i] = ['month' => $i, 'assign' => 100];
+                $results[$i] = ['month' => $i, 'quantity1' => 0, 'quantity2' => 0, 'backup1' => 0, 'backup2' => 0];
             }
         }
 
-        // Calculate backup
-        if($assigns->count() > 0) {
-            foreach ($assigns as $assign) {
-                $result = [];
-                if ($type == 'week') {
-                    $backup = ($member_count - $assign->assign) * 100 / $member_count;
-                    $results[$assign->week]['assign'] = round($backup, 2);
+        $max_quantity = 0;
+        $max_backup = 0;
+        if ($type == 'week') {
+            foreach ($member_counts as $member_count) {
+                if ($member_count->member_total > $max_quantity) {
+                    $max_quantity = $member_count->member_total;
+                }
+                if ($member_count->assign_backup > $max_backup) {
+                    $max_backup = $member_count->assign_backup;
+                }
+                if ($member_count->year == $cond['year'] && $member_count->month == $cond['month']) {
+                    $results[$member_count->week]['quantity1'] = $member_count->member_total;
+                    $results[$member_count->week]['backup1'] = $member_count->assign_backup;
                 } else {
-                    $backup = ($member_count - $assign->assign / 4) * 100 / $member_count;
-                    $results[$assign->month]['assign'] = round($backup, 2);
+                    $results[$member_count->week]['quantity2'] = $member_count->member_total;
+                    $results[$member_count->week]['backup2'] = $member_count->assign_backup;
+                }
+            }
+        } else {
+            foreach ($member_counts as $member_count) {
+                if ($member_count->member_total > $max_quantity) {
+                    $max_quantity = $member_count->member_total;
+                }
+                if ($member_count->assign_backup > $max_backup) {
+                    $max_backup = $member_count->assign_backup;
+                }
+                if ($member_count->year == $cond['year']) {
+                    $results[$member_count->month]['quantity1'] = $member_count->member_total;
+                    $results[$member_count->month]['backup1'] = $member_count->assign_backup; 
+                } else {
+                    $results[$member_count->month]['quantity2'] = $member_count->member_total;
+                    $results[$member_count->month]['backup2'] = $member_count->assign_backup;
                 }
             }
         }
@@ -386,7 +385,59 @@ class PlanController extends Controller
             'success' => true,
             'message' => '',
             'type' => $type,
+            'max_quantity' => $max_quantity,
+            'max_backup' => $max_backup,
+            'year' => $cond['year'],
+            'c_year' => $cond['c_year'],
             'items' => array_values($results)
+        ]);
+    }
+
+    public function generatePlanForAll() {
+        $year = $this->request->get('year');
+        if ($year == null || $year == '') {
+            $year = Date('Y');
+        }
+        $members = Member::select(['id'])->where('del_flg', '=', 0)
+            ->whereNotIn('id', function($_query) use ($year) {
+                $_query->select(['member_id'])->from(with(new Plan)->getTable())->where('year', '=', $year);
+            })->get();
+
+        DB::beginTransaction();
+        try {
+            foreach($members as $member) {
+                for ($month = 1; $month <= 12; $month++) {
+                    $id = Plan::insertGetId([
+                        'member_id' => $member->id,
+                        'year' => $year,
+                        'month' => $month
+                    ]);
+                    if($id) {
+                            $plan_detail_ins = [];
+                            for ($week = 1; $week <= 4; $week++) {
+                                $plan_week = [
+                                    'plan_id' => $id,
+                                    'week' => $week,
+                                    'value' => 0,
+                                    'value2' => 0
+                                ];
+                                array_push($plan_detail_ins, $plan_week);
+                            }
+                            PlanDetail::insert($plan_detail_ins);
+                        }
+                }
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Can not generate plan!'
+            ]);
+        }
+        DB::commit();
+        return response()->json([
+            'success' => true,
+            'message' => ''
         ]);
     }
 }

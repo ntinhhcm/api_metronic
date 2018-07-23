@@ -39,7 +39,7 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
     public static function list($search = []) {
         $query = DB::table('plan')
                 ->leftJoin('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
-                ->select(['plan.member_id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2', 'plan_detail.assign_project', 'plan_detail.credit_project']);
+                ->select(['plan.member_id as member_id', 'plan.id as plan_id', 'plan.year', 'plan.month', 'plan_detail.id as plan_detail_id', 'plan_detail.week', 'plan_detail.value', 'plan_detail.value2', 'plan_detail.assign_project', 'plan_detail.credit_project']);
 
         if (isset($search['value'])) {
             $cond = '=';
@@ -74,10 +74,10 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
                     'member.id as member_id',
                     'member.badge_id',
                     'member.member_name',
-                    'plan.id',
+                    'plan.id as plan_id',
                     'plan.year',
                     'plan.month',
-                    'plan_detail.id',
+                    'plan_detail.id as plan_detail_id',
                     'plan_detail.week',
                     'plan_detail.value',
                     'plan_detail.value2',
@@ -120,23 +120,16 @@ class Plan extends Model implements AuthenticatableContract, AuthorizableContrac
         }
     }
 
-    public static function assignCount($cond = [], $type = 'month') {
+    public static function assignCount($cond = []) {
         $query = DB::table('plan')
-            ->join('plan_detail', 'plan_detail.plan_id', '=', 'plan.id');
+            ->join('plan_detail', 'plan_detail.plan_id', '=', 'plan.id')
+            ->select('value2')
+                ->where([
+                    ['plan.year', '=', $cond['year']],
+                    ['plan.month', '=', $cond['month']],
+                    ['plan_detail.week', '=', $cond['week']]
+                ]);
 
-        if ($type == 'week') {
-            $query->select('plan_detail.week', DB::raw('sum(value2) as assign'))
-                ->where('plan.month', '=', $cond['month'])
-                ->where('plan.year', '=', $cond['year'])
-                ->where('value2', '>', 0)
-                ->groupBy('plan_detail.week');
-        } else {
-            $query->select('plan.month', DB::raw('sum(value2) as assign'))
-                ->where('plan.year', '=', $cond['year'])
-                ->where('value2', '>', 0)
-                ->groupBy('plan.month');
-        }
-
-        return $query->get();
+        return $query->sum('value2');
     }
 }

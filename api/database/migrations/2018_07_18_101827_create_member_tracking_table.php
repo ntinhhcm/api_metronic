@@ -16,9 +16,12 @@ class CreateMemberTrackingTable extends Migration
         Schema::create('member_tracking', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('member_total')->default(0);
-            $table->integer('member_come_total')->default(0);
-            $table->integer('member_leave_total')->default(0);
+            $table->integer('year');
+            $table->integer('month');
+            $table->integer('week');
+            $table->double('assign_backup', 8, 2)->default(0);
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
         });
     }
 

@@ -27,5 +27,6 @@ $router->group(['prefix' => '/api/v1', 'middleware' => 'jwt.auth'], function() u
 	$router->get('/plan/project', ['uses' => 'PlanController@update']);
 	$router->post('/plan/{member_id}/update', ['uses' => 'PlanController@update']);
 	$router->get('/plan/count', ['uses' => 'PlanController@assignCount']);
+	$router->post('/plan/generate', ['uses' => 'PlanController@generatePlanForAll']);
    // $router->get('/plan/export', ['uses' => 'PlanController@export']);
 });
