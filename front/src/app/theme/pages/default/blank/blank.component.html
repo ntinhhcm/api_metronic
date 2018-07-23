@@ -32,29 +32,44 @@
                         </div>
                     </div>
                 </div>
-                <form #filterForm class="m-form m-form--fit m-form--label-align-right">
-                    <div class="m-portlet__body">
-                        <div class="form-group m-form__group row">
-                            <label class="col-sm-1 col-form-label">
-                                Month:
-                            </label>
-                            <div class="col-xs-6 col-md-2">
-                                <input id="month" type="text" class="form-control" [(ngModel)]="month" name="month"  type="text">
+                <div class="m-portlet__body">
+                    <form #filterForm class="m-form m-form--fit m-form--label-align-right">
+                        <div class="row m--margin-bottom-20">
+                            <div class="col m--margin-bottom-10-tablet-and-mobile">
+                                <label class="col-xd-1 col-form-label">
+                                    Month:
+                                </label>
+                                <input id="month" type="text" class="form-control m-input" [(ngModel)]="month" name="month"  type="text">
                             </div>
-                            <label class="col-sm-1 col-form-label">
-                                Year:
-                            </label>
-                            <div class="col-xs-6 col-md-2">
-                                <input id="year" type="text" [(ngModel)]="year" class="form-control" name="year"  type="text">
+                            <div class="col m--margin-bottom-10-tablet-and-mobile">
+                                <label class="col-xd-1 col-form-label">
+                                    Year:
+                                </label>
+                                <input id="year" type="text" class="form-control m-input" [(ngModel)]="year" name="year"  type="text">
                             </div>
+                            <div class="col"></div>
+                            <div class="col m--margin-bottom-10-tablet-and-mobile">
+                                <label class="col-xd-1 col-form-label">
+                                    Compare month:
+                                </label>
+                                <input id="c_month" type="text" class="form-control m-input" [(ngModel)]="c_month" name="c_month"  type="text">
+                            </div>
+                            <div class="col m--margin-bottom-10-tablet-and-mobile">
+                                <label class="col-xd-1 col-form-label">
+                                    Compare year:
+                                </label>
+                                <input id="c_year" type="text" class="form-control m-input" [(ngModel)]="c_year" name="c_year"  type="text">
+                            </div>
+                        </div>
+                        <div class="row m--margin-bottom-20">
                             <div class="col-xs-6 col-md-2">
                                 <button class="btn btn-brand" (click)="filter(filterForm)">
                                     Filter
                                 </button>
                             </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
                 <div class="m-portlet__body">
                     <div id="m_amcharts_1" style="height: 500px;"></div>
                 </div>

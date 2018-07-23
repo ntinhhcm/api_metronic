@@ -16,12 +16,14 @@ var planMember = function () {
 		project_c = credit[2];
 		project_a = assign[2];
 
+		plan_detail_id = credit[3];
+
 		var __template_t_c = '<b>Project: </b>' +  project_c + ' <br/><b>' + credit_ + '</b>';
 		var __template_t_a = '<b>Project: </b>' +  project_a + ' <br/><b>' + assign_ + '</b>';
 
 		return '\
-			<div class="credit" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_c + '" data-placement="right" data="' + row.member_id + '" style="background: ' + color_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
-			<div class="assign" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_a + '" data-placement="right" data="' + row.member_id + '" style="background: ' + color_a + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
+			<div class="credit" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_c + '" data-placement="right" data="' + plan_detail_id + '" style="background: ' + color_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
+			<div class="assign" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_a + '" data-placement="right" data="' + plan_detail_id + '" style="background: ' + color_a + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
 		';
 	};
 
@@ -560,15 +562,10 @@ var planMember = function () {
 					left_width = $('.m-datatable thead').find('.m-datatable__lock--scroll').width() - 20;
 					$('.m-datatable').find('.m-datatable__lock--scroll').css('width', left_width);
 
-					$('.credit').on('click', function() {
-						var member_id = $(this).attr('data');
-						var valcolumn = $(this).parent().parent().attr('data-field');
-						plan_edit.call_modal_add(member_id, valcolumn, 'credit');
-					});
-					$('.assign').on('click', function() {
-						var member_id = $(this).attr('data');
-						var valcolumn = $(this).parent().parent().attr('data-field');
-						plan_edit.call_modal_add(member_id, valcolumn, 'assign');
+					$('.m-datatable td[data-field^="value_"] div').on('click', function() {
+						var type = ['credit', 'assign'];
+						var id = $(this).attr('data');
+						plan_edit.call_modal_add(id, type[$(this).index()]);
 					});
 				}
 			}

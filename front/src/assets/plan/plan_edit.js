@@ -224,10 +224,7 @@ var plan_edit = function() {
                                     </select>\
                                 </div>\
                             </div>\
-                            <input type="hidden" id="p_member_id" name="p_member_id" value="" />\
-                            <input type="hidden" id="p_year" name="p_year" value="" />\
-                            <input type="hidden" id="p_month" name="p_month" value="" />\
-                            <input type="hidden" id="p_week" name="p_week" value="" />\
+                            <input type="hidden" id="plan_detail_id" name="plan_detail_id" value="" />\
                             <input type="hidden" id="p_type" name="p_type" value="" />\
                         </form>\
                     </div>\
@@ -266,6 +263,7 @@ var plan_edit = function() {
                 $('<input/>').attr('type', 'hidden').attr('name', 'assign-' + m + '-' + w).appendTo(group);
                 $('<input/>').attr('type', 'hidden').attr('name', 'passign-' + m + '-' + w).appendTo(group);
                 group.appendTo(td);
+                $('<input/>').attr('type', 'hidden').attr('name', 'plan_detail_id-' + m + '-' + w).appendTo(td);
                 td.appendTo(tr);
             }
             tr.appendTo('#' + e_modal_id + ' table tbody');
@@ -287,9 +285,10 @@ var plan_edit = function() {
                         year = $('#' + e_modal_id  + ' input[name="year"]').val();
                         values = form.find('input[name^="assign-"], input[name^="credit-"]').serializeArray();
                         pvalues = form.find('input[name^="passign-"], input[name^="pcredit-"]').serializeArray();
+                        plan_detail_ids = form.find('input[name^="plan_detail_id-"]').serializeArray();
 
                         localStorage.removeItem(e_modal_id);
-                        localStorage.setItem(e_modal_id, JSON.stringify({member_name: member_name, badge_id: badge_id, year: year, values: values, pvalues: pvalues}));
+                        localStorage.setItem(e_modal_id, JSON.stringify({member_name: member_name, badge_id: badge_id, year: year, values: values, pvalues: pvalues, plan_detail_ids: plan_detail_ids}));
                         break;
                     default:
                 }
@@ -332,8 +331,9 @@ var plan_edit = function() {
                     if (plan.value2 != '') {
                         e_form_radio_update('assign-' + plan.month + '-' + plan.week, plan.value2);
                     }
-                    e_form_hidden_update('pcredit-' + plan.month + '-' + plan.week , plan.credit_project);
-                    e_form_hidden_update('passign-' + plan.month + '-' + plan.week , plan.assign_project);
+                    e_form_hidden_update('pcredit-' + plan.month + '-' + plan.week, plan.credit_project);
+                    e_form_hidden_update('passign-' + plan.month + '-' + plan.week, plan.assign_project);
+                    e_form_hidden_update('plan_detail_id-' + plan.month + '-' + plan.week, plan.plan_detail_id);
                 });
               }
               $('#' + e_modal_id + ' #memberID').val(memberID);
@@ -350,86 +350,31 @@ var plan_edit = function() {
             memberID = $('#' + e_modal_id + ' #memberID').val();
             year = $('#' + e_modal_id + ' input[name="year"]').val();
 
-            var weeks = {
-                count: 0,
-                week: 0,
-                assign: 0,
-                credit: 0,
-                assign_project: '',
-                credit_project: ''
-            };
-
-            var months = {
-                count: 0,
-                month: 0,
-                weeks: []
-            };
-
+            var plan_detail_ids = form.find('input[type="hidden"][name^="plan_detail_id-"]');
             var plans = [];
-            var item = 0;
-            $.each(items, function(index, input) {
-                var name = input.name.split('-');
-                type = name[0];
-                month_num = name[1];
-                week_num = name[2];
-                value = input.value;
+            $.each(plan_detail_ids, function(index, item) {
+                var plan_detail_id = $(this).val();
+                var assign = $(this).parent().find('input[type="hidden"][name^="assign-"]').val();
+                var passign = $(this).parent().find('input[type="hidden"][name^="passign-"]').val();
+                var credit = $(this).parent().find('input[type="hidden"][name^="credit-"]').val();
+                var pcredit = $(this).parent().find('input[type="hidden"][name^="pcredit-"]').val();
 
-                // Add week
-                if (item % 2 == 0) {
-                    if (weeks.count > 0) {
-                        months.weeks.push(weeks);
-                        months.count++;
-                    }
-                    weeks = {
-                        count: 0,
-                        week: 0,
-                        assign: 0,
-                        credit: 0
-                    };
-                    weeks.week = week_num;
-                }
+                var plan_detail = {
+                    id: plan_detail_id,
+                    assign: assign,
+                    credit: credit,
+                    assign_project: passign,
+                    credit_project: pcredit
+                };
 
-                // Add month
-                if (item % 8 == 0) {
-                    if (months.count > 0) {
-                        plans.push(months);
-                    }
-                    months = {
-                        count: 0,
-                        month: 0,
-                        weeks: []
-                    };
-                    months.month = month_num;
-                }
-
-                // Add item to week
-                if (value.length > 0) {
-                    if (type == 'assign') {
-                        weeks.assign = value;
-                        weeks.assign_project = pitems[index].value;
-                    }
-                    if (type == 'credit') {
-                        weeks.credit = value;
-                        weeks.credit_project = pitems[index].value;
-                    }
-                    weeks.count++;
-                }
-
-                if (item == 95) {
-                    if (weeks.count > 0) {
-                        months.weeks.push(weeks);
-                        plans.push(months);
-                    }
-                }
-
-                item++;
+                plans.push(plan_detail);
             });
 
             $.ajax({
                 url: plan_options.apiURL + '/' + memberID + '/edit',
                 headers: { 'Authorization': plan_options.token },
                 method: 'POST',
-                data: {plan: plans, member_id: memberID, year: year}
+                data: {plans: plans, member_id: memberID, year: year}
             }).done(function(results) {
                 // Close modal
                 datatable.reload();
@@ -442,15 +387,21 @@ var plan_edit = function() {
             form_items = JSON.parse(localStorage.getItem(e_modal_id));
             form_items_values = form_items.values;
             form_items_pvalues = form_items.pvalues;
+            form_items_plan_detail_ids = form_items.plan_detail_ids;
 
             // Set item value  to form
             $('#' + e_modal_id  + ' input[name="member_name"]').val(form_items.member_name);
             $('#' + e_modal_id  + ' input[name="badge_id"]').val(form_items.badge_id);
             $('#' + e_modal_id  + ' input[name="year"]').val(form_items.year);
 
-            $.each(form_items_values, function(index, item) {
+            // Update value to assign and credit
+            $.each(form_items_plan_detail_ids, function(index, item) {
                 e_form_radio_update(item.name, item.value);
                 e_form_hidden_update(form_items_pvalues[index].name, form_items_pvalues[index].value);
+            });
+            // Update value to plan_detail_id
+            $.each(form_items_values, function(index, item) {
+                e_form_hidden_update(item.name, item.value);
             });
             localStorage.removeItem(e_modal_id);
             $('#' + e_modal_id).modal();
@@ -569,20 +520,12 @@ var plan_edit = function() {
             });
         },
 
-        call_modal_add: function(member_id, valcolumn, type) {
-            var colum = valcolumn.split('value_');
-            var value = colum[1];
-            year = $('input[name="_year"]').val();
-            // Determime week and month from week of year
-            month = parseInt(value / 4) == 0 ? 1 : Math.ceil(value /4);
-            week = value % 4 != 0 ? value % 4 : 4;
+        call_modal_add: function(id, type) {
             // Set init value to hidden field
-            $('#' + node_modal_id + ' input[name="p_year"]').val(year);
-            $('#' + node_modal_id + ' input[name="p_month"]').val(month);
-            $('#' + node_modal_id + ' input[name="p_week"]').val(week);
-            $('#' + node_modal_id + ' input[name="p_member_id"]').val(member_id);
+            $('#' + node_modal_id + ' input[name="plan_detail_id"]').val(id);
             $('#' + node_modal_id + ' input[name="p_type"]').val(type);
             $('.js-example-basic-multiple').css("width", "400px");
+            // Init selector
             $(".js-example-basic-multiple").select2();
             // Show modal
             $('#' + node_modal_id).modal();
