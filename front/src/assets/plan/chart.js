@@ -119,14 +119,15 @@ var dashboard = function() {
             "export": {
                 "enabled": true,
                 "menu": [{
-                    "format": "PDF",
-                    "label": "PDF",
-                    "title": "PDF"
-                },
-                {
-                    "format": "PNG",
-                    "label": "PNG",
-                    "title": "Export chart to PNG"
+                    "label": "Export",
+                    "class": "export-main",
+                    "menu": [{
+                        "label": "Download as image",
+                        "menu": ["PNG","JPG", "SVG"]
+                    }, {
+                        "label": "Download as data",
+                        "menu": ["CSV", "XLSX"]
+                    }]
                 }]
             },
             "dataProvider": data

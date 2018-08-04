@@ -42,7 +42,6 @@ var search_form = function() {
             }
             //open form add
         }).fail(function(jqXHR, textStatus) {
-            location.reload();
         });
     }
 

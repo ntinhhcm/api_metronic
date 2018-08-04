@@ -292,7 +292,6 @@ var plan_edit = function() {
                         break;
                     default:
                 }
-                location.reload();
             }
         }
     }

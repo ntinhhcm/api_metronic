@@ -1,0 +1,84 @@
+<!-- BEGIN: Subheader -->
+<div class="m-subheader" appunwraptag="">
+	<div class="d-flex align-items-center">
+		<div class="mr-auto">
+			<h3 class="m-subheader__title m-subheader__title--separator">
+				Settings
+			</h3>
+			<ul class="m-subheader__breadcrumbs m-nav m-nav--inline">
+				<li class="m-nav__item m-nav__item--home">
+					<a href="#" class="m-nav__link m-nav__link--icon">
+						<i class="m-nav__link-icon la la-home"></i>
+					</a>
+				</li>
+				<li class="m-nav__separator">
+					-
+				</li>
+				<li class="m-nav__item">
+					<a routerLink="/index" class="m-nav__link">
+						<span class="m-nav__link-text">
+							Dashboard
+						</span>
+					</a>
+				</li>
+				<li class="m-nav__separator">
+					-
+				</li>
+				<li class="m-nav__item">
+					<a routerLink="/setting" class="m-nav__link">
+						<span class="m-nav__link-text">
+							Settings
+						</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<div class="m-content">
+	<div class="row">
+		<div class="col-lg-12">
+			<!--begin::Portlet-->
+			<div class="m-portlet m-portlet--last m-portlet--head-lg m-portlet--responsive-mobile" id="main_portlet">
+				<div class="m-portlet__body">
+					<form class="m-form m-form--label-align-left- m-form--state-" id="m_form">
+						<!--begin: Form Body -->
+						<div class="m-portlet__body">
+							<div class="row">
+								<div class="col-xl-8 offset-xl-2">
+									<div class="m-form__section m-form__section--first">
+										<div class="m-form__heading">
+											<h3 class="m-form__heading-title">
+												Planning Tools
+											</h3>
+										</div>
+										<div class="form-group m-form__group row">
+											<div class="col-xl-3 col-lg-3">
+												<a href="#" class="btn btn-outline-primary m-btn m-btn--icon m-btn--pill m-btn--air make-plan">
+													<span>
+														<i class="la la-archive"></i>
+														<span>
+															Make plans
+														</span>
+													</span>
+												</a>
+											</div>
+											<div class="col-xl-9 col-lg-9">
+												<div class="progress">
+													<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+												</div>
+												<span class="m-form__help">
+														<label class="text-danger">*</label> <label class="text-primary">Create</label> new plans or <label class="text-primary">Update</label> plans <i class="text-info">(For present year only)</i>
+												</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

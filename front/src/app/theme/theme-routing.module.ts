@@ -18,6 +18,10 @@ const routes: Routes = [
                 'loadChildren': '.\/pages\/default\/plan\/plan.module#PlanModule',
             },
             {
+                'path': 'setting',
+                'loadChildren': '.\/pages\/default\/setting\/setting.module#SettingModule',
+            },
+            {
                 "path": "404",
                 "loadChildren": ".\/pages\/default\/not-found\/not-found.module#NotFoundModule"
             },

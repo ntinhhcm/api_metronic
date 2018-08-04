@@ -15,7 +15,7 @@
 					-
 				</li>
 				<li class="m-nav__item">
-					<a href="/index" class="m-nav__link">
+					<a routerLink="/index" class="m-nav__link">
 						<span class="m-nav__link-text">
 							Dashboard
 						</span>
@@ -25,7 +25,7 @@
 					-
 				</li>
 				<li class="m-nav__item">
-					<a href="/plan" class="m-nav__link">
+					<a routerLink="/plan" class="m-nav__link">
 						<span class="m-nav__link-text">
 							Planning tool
 						</span>
@@ -37,88 +37,95 @@
 </div>
 <!-- END: Subheader -->
 <div class="m-content">
-	<div class="m-portlet m-portlet--mobile">
-		<div class="m-portlet__body">
-			<!--begin: Search Form -->
-			<form class="m-form m-form--fit m--margin-bottom-20" id="search_form">
-				<div class="row m--margin-bottom-20">
-					<div class="col m--margin-bottom-10-tablet-and-mobile">
-						<label>
-							BadgeID:
-						</label>
-						<div class="m-input-icon m-input-icon--left">
-							<input type="text" class="form-control m-input" id="badge_id" name="badge_id" data-col-index="0" data-role="tagsinput">
-							<span class="m-input-icon__icon m-input-icon__icon--left">
-								<span>
-									<i class="la la-barcode"></i>
-								</span>
-							</span>
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="m-portlet m-portlet--mobile">
+				<div class="m-portlet__body">
+					<!--begin: Search Form -->
+					<form class="m-form m-form--fit m--margin-bottom-20" id="search_form">
+						<div class="m-portlet__body">
+							<div class="row">
+								<div class="col-md-3">
+									<label>
+										BadgeID:
+									</label>
+									<div class="m-input-icon m-input-icon--left">
+										<input type="text" class="form-control m-input" id="badge_id" name="badge_id" data-col-index="0" data-role="tagsinput">
+										<span class="m-input-icon__icon m-input-icon__icon--left">
+											<span>
+												<i class="la la-barcode"></i>
+											</span>
+										</span>
+									</div>
+								</div>
+								<div class="col-md-3">
+									<label>
+										Project:
+									</label>
+									<div id="test" class="m-input-icon m-input-icon--left">
+										<input type="text" class="form-control m-input" id="project" name="project" data-col-index="1" data-role="tagsinput">
+										<span class="m-input-icon__icon m-input-icon__icon--left">
+											<span>
+												<i class="la la-users"></i>
+											</span>
+										</span>
+									</div>
+								</div>
+								<div class="col-md-3">
+									<label>
+										Email:
+									</label>
+									<div id="test" class="m-input-icon m-input-icon--left">
+										<input type="text" class="form-control m-input" id="member_email" name="member_email" data-col-index="1" data-role="tagsinput">
+										<span class="m-input-icon__icon m-input-icon__icon--left">
+											<span>
+												<i class="la la-envelope-o"></i>
+											</span>
+										</span>
+									</div>
+								</div>
+								<div class="col-md-3">
+									<label>
+										Plan year:
+									</label>
+									<div class="m-input-icon m-input-icon--left">
+										<input id="plan_year" type="text" class="form-control" name="plan_year"  type="text">
+									</div>
+								</div>
+							</div>
+							<div class="m-separator m-separator--md m-separator--dashed"></div>
+							<div class="row">
+								<div class="col-lg-12">
+									<button class="btn btn-brand m-btn m-btn--icon" id="m_search" (click)="search()">
+										<span>
+											<i class="la la-search"></i>
+											<span>
+												Search
+											</span>
+										</span>
+									</button>
+									&nbsp;&nbsp;
+									<button class="btn btn-secondary m-btn m-btn--icon" id="m_reset">
+										<span>
+											<i class="la la-close"></i>
+											<span>
+												Reset
+											</span>
+										</span>
+									</button>
+								</div>
+							</div>
 						</div>
-					</div>
-					<div class="col m--margin-bottom-10-tablet-and-mobile">
-						<label>
-							Project:
-						</label>
-						<div id="test" class="m-input-icon m-input-icon--left">
-							<input type="text" class="form-control m-input" id="project" name="project" data-col-index="1" data-role="tagsinput">
-							<span class="m-input-icon__icon m-input-icon__icon--left">
-								<span>
-									<i class="la la-users"></i>
-								</span>
-							</span>
-						</div>
-					</div>
-					<div class="col m--margin-bottom-10-tablet-and-mobile">
-						<label>
-							Email:
-						</label>
-						<div id="test" class="m-input-icon m-input-icon--left">
-							<input type="text" class="form-control m-input" id="member_email" name="member_email" data-col-index="1" data-role="tagsinput">
-							<span class="m-input-icon__icon m-input-icon__icon--left">
-								<span>
-									<i class="la la-envelope-o"></i>
-								</span>
-							</span>
-						</div>
-					</div>
-					<div class="col m--margin-bottom-10-tablet-and-mobile">
-						<label>
-							Plan year:
-						</label>
-						<div class="m-input-icon m-input-icon--left">
-                            <input id="plan_year" type="text" class="form-control" name="plan_year"  type="text">
-						</div>
-					</div>
+					</form>
+					<!--end: Search Form -->
+					<!--begin: Datatable -->
+					<div class="m_datatable" id="plan_member"></div>
+					<!-- Year to edit plan member, add note to week -->
+					<input type="hidden" name="_year" />
+					<!--end: Datatable -->
 				</div>
-				<div class="m-separator m-separator--md m-separator--dashed"></div>
-				<div class="row">
-					<div class="col-lg-12">
-						<button class="btn btn-brand m-btn m-btn--icon" id="m_search" (click)="search()">
-							<span>
-								<i class="la la-search"></i>
-								<span>
-									Search
-								</span>
-							</span>
-						</button>
-						&nbsp;&nbsp;
-						<button class="btn btn-secondary m-btn m-btn--icon" id="m_reset">
-							<span>
-								<i class="la la-close"></i>
-								<span>
-									Reset
-								</span>
-							</span>
-						</button>
-					</div>
-				</div>
-			</form>
-			<!--end: Search Form -->
-			<!--begin: Datatable -->
-			<div class="m_datatable" id="plan_member"></div>
-			<!-- Year to edit plan member, add note to week -->
-			<input type="hidden" name="_year" />
-			<!--end: Datatable -->
+			
+			</div>
 		</div>
 	</div>
 </div>

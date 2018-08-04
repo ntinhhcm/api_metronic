@@ -540,7 +540,7 @@ var planMember = function () {
 			};
 
 			options.ajax401CallBack = function(jqXHR) {
-				location.reload();
+				//location.reload();
 			}
 
 			options.initFinish = {
