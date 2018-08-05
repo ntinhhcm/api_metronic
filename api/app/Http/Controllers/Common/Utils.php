@@ -12,11 +12,14 @@ Class Utils {
 
 	public static function JWTCheck($token) {
         try {
-            $credenticals = JWT::decode($token, env('JWT_SECRET'), ['HS256']);
+            $secret_key = env('JWT_SECRET');
+            if ( ! $secret_key) {
+                return "Error";
+            }
+            $credenticals = JWT::decode($token, $secret_key, ['HS256']);
         } catch (ExpiredException $e) {
             list($header, $payload, $signature) = explode(".", $token);
             $expired_info = json_decode(base64_decode($payload));
-
             return config('rptm.error.auth.token_expired.code');
         } catch (InvalidArgumentException $e) {
             return config('rptm.error.auth.token_expired.code');
@@ -24,5 +27,17 @@ Class Utils {
         	return config('rptm.error.auth.token_invalid.code');
         }
         return $credenticals->aud;
-	}
+    }
+
+    public static function calculateWeek($day) {
+		$week = 1;
+		if (in_array($day, range(8, 14))) {
+			$week = 2;
+		} else if (in_array($day, range(15, 21))) {
+			$week = 3;
+		} else if ($day > 21) {
+			$week = 4;
+        }
+        return $week;
+    }
 }

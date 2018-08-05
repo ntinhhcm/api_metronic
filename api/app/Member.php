@@ -27,7 +27,10 @@ class Member extends Model implements AuthenticatableContract, AuthorizableContr
     }
 
     public static function getList($condition = [], $order = [], $limit = -1, $offset = -1) {
-        $query = DB::table('member')->select(['member.id', 'badge_id', 'member_name']);
+        $query = DB::table('member')
+        ->join('plan', 'member.id', '=', 'plan.member_id')
+        ->select(['member.id', 'badge_id', 'member_name'])
+        ->groupBy('member.id');
 
         if (isset($condition['project'])) {
             $query->join('project_member', 'project_member.member_id', '=', 'member.id')
@@ -38,19 +41,36 @@ class Member extends Model implements AuthenticatableContract, AuthorizableContr
         if (isset($condition['badge_id'])) {
             $query->whereIn('badge_id', $condition['badge_id']);
         }
+
         if (isset($condition['member_email'])) {
             $query->whereIn('member_email', $condition['member_email']);
         }
+
+        $query->where('plan.year', '=', $condition['plan_year']);
+
         if (isset($order['field']) && isset($order['type'])) {
             $query->orderBy($order['field'], $order['type']);
         }
+
         if ($limit != -1) {
             $query->limit($limit);
         }
+
         if ($offset != -1) {
             $query->offset($offset);
         }
 
         return $query->get();
+    }
+
+    public static function calMemberTotalWithAssign($year, $month, $week) {
+        return SELF::join('plan', 'member.id', '=', 'plan.member_id')
+    		->join('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
+            ->where('plan.year', '=', $year)
+            ->where('plan.month', '=', $month)
+            ->where('plan_detail.week', '=', $week)
+            ->where('plan_detail.value2', '>=', '0')
+            ->select([DB::raw('count(member.id) as member_total'), DB::raw('sum(value2) as assigns')])
+            ->first();
     }
 }

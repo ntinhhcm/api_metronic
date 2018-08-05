@@ -48,4 +48,38 @@ class MemberTracking extends Model implements AuthenticatableContract, Authoriza
         }
         return  $query->get();
     }
+
+    public static function setTracking($year, $month, $week) {
+        $cal = Member::calMemberTotalWithAssign($year, $month, $week);
+        $member_total = $cal->member_total;
+		$assigns = $cal->assigns ? $cal->assigns : 0;
+
+		$member_tracking = SELF::select('id')->where([
+			['year', '=', $year],
+			['month', '=', $month],
+			['week', '=', $week]
+		])->first();
+
+		if ($member_tracking) {
+			$model_save = SELF::find($member_tracking->id);
+			$model_save->member_total = $member_total;
+			$model_save->assign_backup = 0;
+			if ($member_total > 0) {
+				$model_save->assign_backup = ($member_total - $assigns) * 100 / $member_total;
+			}
+			$model_save->save();
+		} else {
+			$assign_backup = 0;
+			if ($member_total > 0) {
+				$assign_backup = ($member_total - $assigns) * 100 / $member_total;
+			}
+			SELF::insert([
+				'year' => $year,
+				'month' => $month,
+				'week' => $week,
+				'member_total' => $member_total,
+				'assign_backup' => $assign_backup,
+			]);
+		}
+    }
 }

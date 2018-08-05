@@ -9,6 +9,7 @@ use App\PlanDetail;
 use App\Member;
 use App\MemberTracking;
 use DB;
+use App\Http\Controllers\Common\Utils;
 
 class PlanController extends Controller
 {
@@ -25,7 +26,7 @@ class PlanController extends Controller
     }
 
     /**
-     * Get all planning list
+     * Get all plans by year
      * @return mixed
      */
     public function list() {
@@ -75,6 +76,11 @@ class PlanController extends Controller
             $sort['field'] = $this->request->get('sort')['field'];
         }
 
+        $search_cond['plan_year'] = Date('Y');
+        if ( ! empty($this->request->get('plan_year'))) {
+            $search_cond['plan_year'] = $this->request->get('plan_year');
+        }
+
         // Get member list
         $members = Member::getList($search_cond, $sort, $limit, $offset);
 
@@ -83,11 +89,6 @@ class PlanController extends Controller
             $member_ids[] = $member->id;
         }
         $search_cond['member_id'] = $member_ids;
-
-        $search_cond['plan_year'] = Date('Y');
-        if ( ! empty($this->request->get('plan_year'))) {
-            $search_cond['plan_year'] = $this->request->get('plan_year');
-        }
 
         $plans = Plan::list($search_cond);
         $results = [];
@@ -393,12 +394,18 @@ class PlanController extends Controller
         ]);
     }
 
+    /**
+     * Generate plans for all members
+     * (Execute 1 time for 1 years or Excute when update plan for new member just joined)
+     * 
+     * @return mix
+     */
     public function generatePlanForAll() {
         $year = $this->request->get('year');
         if ($year == null || $year == '') {
             $year = Date('Y');
         }
-        $members = Member::select(['id'])->where('del_flg', '=', 0)
+        $members = Member::select(['id', 'created_at'])->where('del_flg', '=', 0)
             ->whereNotIn('id', function($_query) use ($year) {
                 $_query->select(['member_id'])->from(with(new Plan)->getTable())->where('year', '=', $year);
             })->get();
@@ -406,6 +413,9 @@ class PlanController extends Controller
         DB::beginTransaction();
         try {
             foreach($members as $member) {
+                $join_month = $member->created_at->month;
+                $join_week = Utils::calculateWeek($member->created_at->day);
+
                 for ($month = 1; $month <= 12; $month++) {
                     $id = Plan::insertGetId([
                         'member_id' => $member->id,
@@ -413,18 +423,22 @@ class PlanController extends Controller
                         'month' => $month
                     ]);
                     if($id) {
-                            $plan_detail_ins = [];
-                            for ($week = 1; $week <= 4; $week++) {
-                                $plan_week = [
-                                    'plan_id' => $id,
-                                    'week' => $week,
-                                    'value' => 0,
-                                    'value2' => 0
-                                ];
-                                array_push($plan_detail_ins, $plan_week);
+                        $plan_detail_ins = [];
+                        for ($week = 1; $week <= 4; $week++) {
+                            $assign = -1;
+                            if ($month > $join_month || ($month == $join_month && $week >= $join_week)) {
+                                $assign = 0;
                             }
-                            PlanDetail::insert($plan_detail_ins);
+                            $plan_week = [
+                                'plan_id' => $id,
+                                'week' => $week,
+                                'value' => 0,
+                                'value2' => $assign
+                            ];
+                            array_push($plan_detail_ins, $plan_week);
                         }
+                        PlanDetail::insert($plan_detail_ins);
+                    }
                 }
             }
         } catch (Exception $e) {
