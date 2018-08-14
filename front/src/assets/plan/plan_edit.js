@@ -1,9 +1,8 @@
-var plan_options = {
-    apiURL: '',
-    token: ''
-};
-
 var plan_edit = function() {
+    var options = {
+        apiURL: '',
+        token: ''
+    };
     var e_modal_id = 'edit_modal';
     var e_template = '\
         <div id="' + e_modal_id + '" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">\
@@ -65,19 +64,19 @@ var plan_edit = function() {
                     <tr>\
                       <th scope="col" colspan="2">MW</th>\
                       <th scope="col"> 1<br />\
-                        C-<button type="button" class="btn btn-outline-success cc-fast-input" data="cc-1">0</button>\
+                        C-<button type="button" class="btn btn-outline-info cc-fast-input" data="cc-1">0</button>\
                         A-<button type="button" class="btn btn-outline-success ac-fast-input" data="ac-1">0</button>\
                       </th>\
                       <th scope="col"> 2<br />\
-                        C-<button type="button" class="btn btn-outline-success cc-fast-input" data="cc-2">0</button>\
+                        C-<button type="button" class="btn btn-outline-info cc-fast-input" data="cc-2">0</button>\
                         A-<button type="button" class="btn btn-outline-success ac-fast-input" data="ac-2">0</button>\
                       </th>\
                       <th scope="col"> 3<br />\
-                        C-<button type="button" class="btn btn-outline-success cc-fast-input" data="cc-3">0</button>\
+                        C-<button type="button" class="btn btn-outline-info cc-fast-input" data="cc-3">0</button>\
                         A-<button type="button" class="btn btn-outline-success ac-fast-input" data="ac-3">0</button>\
                       </th>\
                       <th scope="col"> 4<br />\
-                        C-<button type="button" class="btn btn-outline-success cc-fast-input" data="cc-4">0</button>\
+                        C-<button type="button" class="btn btn-outline-info cc-fast-input" data="cc-4">0</button>\
                         A-<button type="button" class="btn btn-outline-success ac-fast-input" data="ac-4">0</button>\
                       </th>\
                     </tr>\
@@ -146,15 +145,20 @@ var plan_edit = function() {
         var group_radio = $('<div/>');
         group_radio.attr('class', 'btn-group btn-group-toggle').attr('data-toggle', 'buttons');
 
-        var label = $('<label/>');
+        /* var label = $('<label/>');
         label.attr('class', 'btn btn-secondary');
         label.append(type[0].toLocaleUpperCase());
-        label.appendTo(group_radio);
+        label.appendTo(group_radio); */
 
         $.each(define_v, function(index, value) {
             // Define label
             var label = $('<label/>');
-            label.attr('class', 'btn btn-outline-info');
+            label.addClass('btn');
+            if (type == 'credit') {
+                label.addClass('btn btn-outline-info');
+            } else {
+                label.addClass('btn btn-outline-success');
+            }
             label.append(value);
             // Define radio
             var input = $('<input/>');
@@ -248,8 +252,8 @@ var plan_edit = function() {
             var tr = $('<tr></tr>');
             $('<th style="vertical-align: middle;" scope="row">' + m + '</th>').appendTo(tr);
             var td = $('<td/>');
-            $('<button type="button" class="btn btn-outline-success cr-fast-input" data="cr-' + m + '">0</button>').appendTo(td);
-            $('<button type="button" class="btn btn-outline-success ar-fast-input" data="ar-' + m + '">0</button>').appendTo(td);
+            $('<span>C-</span><button type="button" class="btn btn-outline-info cr-fast-input" data="cr-' + m + '">0</button>').appendTo(td);
+            $('<span>A-</span><button type="button" class="btn btn-outline-success ar-fast-input" data="ar-' + m + '">0</button>').appendTo(td);
             td.appendTo(tr);
             for (var w = 1; w <= 4; w++) {
                 // Group radio for credit
@@ -296,12 +300,29 @@ var plan_edit = function() {
         }
     }
 
+    var getproject = function() {
+        var projects = '';
+        $.ajax({
+            url: options.apiURL +'/project',
+            headers: { 'Authorization': options.token },
+            method: 'GET',
+            async: false
+        }).done(function(results) {
+            if(results.total_items > 0) {
+                projects = results.items;
+            }
+            //open form add
+        }).fail(function(jqXHR, textStatus) {
+            error_handle(jqXHR);
+        });
+        return projects;
+    }
+
     var Plugin = {
         init: function(apiURL, token) {
-            plan_options.apiURL = apiURL;
-            plan_options.token = token;
+            options.apiURL = apiURL;
+            options.token = token;
             addBody();
-            Plugin.getproject();
         },
         edit: function(memberID, v_member_name, v_badge_id) {
             e_form_reset();
@@ -313,8 +334,8 @@ var plan_edit = function() {
             }
 
             $.ajax({
-                url: plan_options.apiURL + '/' + memberID + '/edit',
-                headers: { 'Authorization': plan_options.token },
+                url: options.apiURL + '/' + memberID + '/edit',
+                headers: { 'Authorization': options.token },
                 method: 'GET',
                 data: {year: _year}
             }).done(function(results) {
@@ -370,8 +391,8 @@ var plan_edit = function() {
             });
 
             $.ajax({
-                url: plan_options.apiURL + '/' + memberID + '/edit',
-                headers: { 'Authorization': plan_options.token },
+                url: options.apiURL + '/' + memberID + '/edit',
+                headers: { 'Authorization': options.token },
                 method: 'POST',
                 data: {plans: plans, member_id: memberID, year: year}
             }).done(function(results) {
@@ -413,8 +434,8 @@ var plan_edit = function() {
             var memberID = $('#d_member_id').val();
             var year = $('input[name="_year"]').val();
             $.ajax({
-                url: plan_options.apiURL + '/' + memberID + '/delete',
-                headers: { 'Authorization': plan_options.token },
+                url: options.apiURL + '/' + memberID + '/delete',
+                headers: { 'Authorization': options.token },
                 method: 'POST',
                 data: {member_id: memberID, year: year}
             }).done(function(results) {
@@ -433,11 +454,6 @@ var plan_edit = function() {
                 Plugin.edit_submit();
             });
             // On click radio button
-/*            $('#' + e_modal_id + ' input[type="radio"]').on('click', function() {
-                var parent = $(this).parent().parent();
-                var hidden = parent.find('input[type="hidden"][name^="assign-"], input[type="hidden"][name^="credit-"]');
-                hidden.val($(this).val());
-            });*/
             $('#' + e_modal_id + ' form label').on('click', function() {
                 var parent = $(this).parent();
                 var radio = $(this).find('[type="radio"]');
@@ -494,38 +510,25 @@ var plan_edit = function() {
 
         },
 
-        getproject: function(){
-            var projects = '';
-            $.ajax({
-                url: plan_options.apiURL +'/project',
-                headers: { 'Authorization': plan_options.token },
-                method: 'GET',
-            }).done(function(results) {
-                if(results.total_items > 0) {
-                    projects = results.items;
-                    $('#select_project').empty()
-                    $.each(projects, function(index, project) {
-                        if(project != '') {
-                            $('#select_project').append($('<option>', {
-                                value: project.project_name,
-                                text: project.project_name
-                            }));
-                        }
-                    });
-                }
-                //open form add
-            }).fail(function(jqXHR, textStatus) {
-                error_handle(jqXHR);
-            });
-        },
-
-        call_modal_add: function(id, type) {
+        call_modal_add: function(id, type, projects_str) {
             // Set init value to hidden field
+            $('#select_project').empty();
+            var projects = getproject();
+            var selectedProject = projects_str.split(',');
+            $.each(projects, function(index, project) {
+                if(project != '') {
+                    $('#select_project').append($('<option>', {
+                        value: project.project_name,
+                        text: project.project_name
+                    }));
+                }
+            });
             $('#' + node_modal_id + ' input[name="plan_detail_id"]').val(id);
             $('#' + node_modal_id + ' input[name="p_type"]').val(type);
             $('.js-example-basic-multiple').css("width", "400px");
             // Init selector
             $(".js-example-basic-multiple").select2();
+            $(".js-example-basic-multiple").val(selectedProject).trigger('change');
             // Show modal
             $('#' + node_modal_id).modal();
         },
@@ -546,8 +549,8 @@ var plan_edit = function() {
             params['select_project'] = select_value;
 
             $.ajax({
-                url: plan_options.apiURL + '/' + memberID + '/update',
-                headers: {'Authorization': plan_options.token },
+                url: options.apiURL + '/' + memberID + '/update',
+                headers: {'Authorization': options.token },
                 method: 'POST',
                 data: params
             }).done(function(results) {

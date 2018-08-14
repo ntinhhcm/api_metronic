@@ -8,40 +8,47 @@ var search_form = function() {
         $('#search_form input[name="badge_id"]').tagsinput();
     }
 
-    var project_name = function() {
+    var getproject = function() {
+        var projects = '';
         $.ajax({
             url: options.apiURL +'/project',
             headers: { 'Authorization': options.token },
             method: 'GET',
+            async: false
         }).done(function(results) {
-            if (results.total_items > 0) {
-                var projects = new Bloodhound({
-                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                    local: $.map(results.items, function(item) {
-                        return {
-                            value: item.project_name
-                        };
-                    })
-                });
-                projects.initialize();
-                $('#search_form input[name="project"]').tagsinput({
-                    typeaheadjs: [{
-                        minLength: 1,
-                        highlight: true
-                    },{
-                        name: 'projects',
-                        displayKey: 'value',
-                        valueKey: 'value',
-                        source: projects.ttAdapter()
-                    }],
-                    freeInput: true
-                });
-            } else {
-                $('#search_form input[name="project"]').tagsinput();
+            if(results.total_items > 0) {
+                projects = results.items;
             }
             //open form add
         }).fail(function(jqXHR, textStatus) {
+            error_handle(jqXHR);
+        });
+        return projects;
+    }
+
+    var project_name = function() {
+        data = getproject();
+        var projects = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            local: $.map(data, function(item) {
+                return {
+                    value: item.project_name
+                };
+            })
+        });
+        projects.initialize();
+        $('#search_form input[name="project"]').tagsinput({
+            typeaheadjs: [{
+                minLength: 1,
+                highlight: true
+            },{
+                name: 'projects',
+                displayKey: 'value',
+                valueKey: 'value',
+                source: projects.ttAdapter()
+            }],
+            freeInput: true
         });
     }
 
@@ -86,7 +93,3 @@ function initSearch(url, token) {
         search_form.reset();
     });
 }
-
-//== Initialization
-jQuery(document).ready(function() {
-});

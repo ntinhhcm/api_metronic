@@ -34,8 +34,8 @@ export class PlanComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit()  {
     this._script.loadScripts('app-plan', ['assets/plan/search.js', 'assets/plan/plan_edit.js', 'assets/plan/left.js']);
-    this.loadData();
     initSearch(this.url + '/plan', this.token);
+    this.loadData();
     initEditPlan(this.url, this.token);
   }
 

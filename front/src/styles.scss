@@ -5,12 +5,17 @@
 	}
 }
 
+.modal-open {
+    overflow: hidden!important;
+}
+
 #edit_modal {
 	form {
 		td {
 			label {
-				width: 30px;
+				width: 25px;
                 padding: 5px 1px;
+                font-size: 0.9rem; 
             }
         }
         button[class$="-fast-input"] {

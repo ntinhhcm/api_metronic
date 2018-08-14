@@ -22,8 +22,12 @@ var planMember = function () {
 		var __template_t_a = '<b>Project: </b>' +  project_a + ' <br/><b>' + assign_ + '</b>';
 
 		return '\
-			<div class="credit" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_c + '" data-placement="right" data="' + plan_detail_id + '" style="background: ' + color_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
-			<div class="assign" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_a + '" data-placement="right" data="' + plan_detail_id + '" style="background: ' + color_a + '; width: 30px; height: 30px; border: 1px solid #ffffff;"></div>\
+			<div class="credit" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_c + '" data-placement="right" data="' + plan_detail_id + '" style="background: ' + color_c + '; width: 30px; height: 30px; border: 1px solid #ffffff;">\
+				<input type="hidden" value="' + project_c + '"/>\
+			</div>\
+			<div class="assign" data-toggle="m-tooltip" title="" data-html="true" data-original-title="' + __template_t_a + '" data-placement="right" data="' + plan_detail_id + '" style="background: ' + color_a + '; width: 30px; height: 30px; border: 1px solid #ffffff;">\
+				<input type="hidden" value="' + project_a + '"/>\
+			</div>\
 		';
 	};
 
@@ -500,6 +504,7 @@ var planMember = function () {
 						headers: {
 							'Authorization': token
 						},
+						async: false,
 						map: function(raw) {
 							// Set _year global
 							if (typeof raw.meta.year != 'undefined') {
@@ -565,7 +570,8 @@ var planMember = function () {
 					$('.m-datatable td[data-field^="value_"] div').on('click', function() {
 						var type = ['credit', 'assign'];
 						var id = $(this).attr('data');
-						plan_edit.call_modal_add(id, type[$(this).index()]);
+						var projects = $(this).find('input').val();
+						plan_edit.call_modal_add(id, type[$(this).index()], projects);
 					});
 				}
 			}
