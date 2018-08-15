@@ -63,14 +63,25 @@ class Member extends Model implements AuthenticatableContract, AuthorizableContr
         return $query->get();
     }
 
-    public static function calMemberTotalWithAssign($year, $month, $week) {
-        return SELF::join('plan', 'member.id', '=', 'plan.member_id')
-    		->join('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
-            ->where('plan.year', '=', $year)
-            ->where('plan.month', '=', $month)
-            ->where('plan_detail.week', '=', $week)
-            ->where('plan_detail.value2', '>=', '0')
-            ->select([DB::raw('count(member.id) as member_total'), DB::raw('sum(value2) as assigns')])
-            ->first();
+    public static function calMemberTotalWithAssign($year, $month = 0, $week = 0) {
+        $query = SELF::join('plan', 'member.id', '=', 'plan.member_id')
+            ->join('plan_detail', 'plan.id', '=', 'plan_detail.plan_id')
+            ->where('plan_detail.value2', '>=', '0');
+        if ($year && $month & $week) {
+            $query->where('plan.year', '=', $year);
+            $query->where('plan.month', '=', $month);
+            $query->where('plan_detail.week', '=', $week);
+            $query->select([DB::raw('count(member.id) as member_total'), DB::raw('sum(value2) as assigns')]);
+        } else if ($year && $month) {
+            $query->where('plan.year', '=', $year);
+            $query->where('plan.month', '=', $month);
+            $query->select([DB::raw('count(member.id) as member_total'), DB::raw('sum(value2) as assigns'), 'week']);
+            $query->groupBy('week');
+        } else {
+            $query->where('plan.year', '=', $year);
+            $query->select([DB::raw('count(member.id) as member_total'), DB::raw('sum(value2) as assigns'), 'month', 'week']);
+            $query->groupBy('month', 'week');
+        }
+        return $query->get();
     }
 }

@@ -40,4 +40,11 @@ Class Utils {
         }
         return $week;
     }
+
+    public static function calculateBackup($member_total, $assigns) {
+        if ($member_total == 0) {
+            return 0;
+        }
+        return ($member_total - $assigns) * 100 / $member_total;
+    }
 }

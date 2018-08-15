@@ -454,4 +454,30 @@ class PlanController extends Controller
             'message' => ''
         ]);
     }
+
+    public function calculateAssignBackup() {
+        $result = false;
+        $type = $this->request->get('type');
+        $year = Date('Y');
+        $month = Date('m');
+        $week = Utils::calculateWeek(Date('d'));
+        if ($type == 'week') {
+            $result = MemberTracking::setTracking($year, $month, $week);
+        } else if($type == 'month') {
+            $result = MemberTracking::setTracking($year, $month);
+        } else {
+            $result = MemberTracking::setTracking($year);
+        }
+        if ($result) {
+            return response()->json([
+                'success' => true,
+                'message' => ''
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Can not calculate and insert to database'
+            ]);
+        }
+    }
 }

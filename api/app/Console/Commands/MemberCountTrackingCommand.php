@@ -17,6 +17,7 @@ class MemberCountTrackingCommand extends Command {
 
 	public function handle() {
 		if ($this->argument('date') != 1) {
+			echo "Calculate for week";
 			$current_day = Date('d');
 			$current_month = Date('n');
 			$current_year = Date('Y');
@@ -44,12 +45,9 @@ class MemberCountTrackingCommand extends Command {
 			}
 			MemberTracking::setTracking($insert_year, $insert_month, $insert_week);
 		} else {
+			echo "Calculate for year";
 			$current_year = Date('Y');
-			for ($m = 1; $m <= 12; $m++) {
-				for ($w = 1; $w <= 4; $w++) {
-					MemberTracking::setTracking($current_year, $m, $w);
-				}
-			}
+			MemberTracking::setTracking($current_year);
 		}
 	}
 }

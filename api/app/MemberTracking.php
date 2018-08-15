@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use DB;
+use App\Http\Controllers\Common\Utils;
 
 class MemberTracking extends Model implements AuthenticatableContract, AuthorizableContract
 {
@@ -49,37 +50,65 @@ class MemberTracking extends Model implements AuthenticatableContract, Authoriza
         return  $query->get();
     }
 
-    public static function setTracking($year, $month, $week) {
-        $cal = Member::calMemberTotalWithAssign($year, $month, $week);
-        $member_total = $cal->member_total;
-		$assigns = $cal->assigns ? $cal->assigns : 0;
+    public static function setTracking($year, $month = 0, $week = 0) {
+        try {
+            $cals = Member::calMemberTotalWithAssign($year, $month, $week);
+            $insertList = [];
+            if ($week) {
+                SELF::where('year', '=', $year)
+                ->where('month', '=', $month)
+                ->where('week', '=', $week)
+                ->delete();
 
-		$member_tracking = SELF::select('id')->where([
-			['year', '=', $year],
-			['month', '=', $month],
-			['week', '=', $week]
-		])->first();
+                $member_total = $cals[0]->member_total;
+                $assigns = $cals[0]->assigns;
+                $assign_backup = Utils::calculateBackup($member_total, $assigns);
 
-		if ($member_tracking) {
-			$model_save = SELF::find($member_tracking->id);
-			$model_save->member_total = $member_total;
-			$model_save->assign_backup = 0;
-			if ($member_total > 0) {
-				$model_save->assign_backup = ($member_total - $assigns) * 100 / $member_total;
-			}
-			$model_save->save();
-		} else {
-			$assign_backup = 0;
-			if ($member_total > 0) {
-				$assign_backup = ($member_total - $assigns) * 100 / $member_total;
-			}
-			SELF::insert([
-				'year' => $year,
-				'month' => $month,
-				'week' => $week,
-				'member_total' => $member_total,
-				'assign_backup' => $assign_backup,
-			]);
-		}
+                $insertList = [
+                    'year' => $year,
+				    'month' => $month,
+				    'week' => $week,
+				    'member_total' => $member_total,
+				    'assign_backup' => $assign_backup,
+                ];
+            } else if ($month) {
+                SELF::where('year', '=', $year)
+                ->where('month', '=', $month)
+                ->delete();
+
+                foreach ($cals as $cal) {
+                    $member_total = $cal->member_total;
+                    $assigns = $cal->assigns;
+                    $assign_backup = Utils::calculateBackup($member_total, $assigns);
+                    array_push($insertList, [
+                        'year' => $year,
+                        'month' => $month,
+                        'week' => $cal->week,
+                        'member_total' => $member_total,
+				        'assign_backup' => $assign_backup,
+                    ]);
+                }
+            } else {
+                SELF::where('year', '=', $year)
+                ->delete();
+
+                foreach ($cals as $cal) {
+                    $member_total = $cal->member_total;
+                    $assigns = $cal->assigns;
+                    $assign_backup = Utils::calculateBackup($member_total, $assigns);
+                    array_push($insertList, [
+                        'year' => $year,
+                        'month' => $cal->month,
+                        'week' => $cal->week,
+                        'member_total' => $member_total,
+				        'assign_backup' => $assign_backup,
+                    ]);
+                }
+            }
+            SELF::insert($insertList);
+            return true;
+        } catch(Exception $e) {
+            return false;
+        }
     }
 }
