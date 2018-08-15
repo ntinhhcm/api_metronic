@@ -5,7 +5,6 @@ var setting = function() {
     }
     var on_click_make_plan = function() {
         $('.make-plan').click(function() {
-            console.log(`make plan`);
             $.ajax({
                 url: options.apiUrl + '/plan/generate',
                 headers: { 'Authorization': options.token },
@@ -29,6 +28,40 @@ var setting = function() {
             });
         });
     }
+
+    var message = function(type, message) {
+        swal({
+            type: type,
+            title: message,
+            showConfirmButton: false,
+        });
+    }
+
+    var on_click_calculate = function() {
+        $('a[class*=cal-]').click(function(event) {
+            var type = 'year';
+            if ($(this).attr('class').search('cal-week') != -1) {
+                type = 'week';
+            } else if($(this).attr('class').search('cal-month') != -1) {
+                type = 'month'
+            }
+            $.ajax({
+                url: options.apiUrl + '/plan/calculate',
+                headers: { 'Authorization': options.token },
+                method: 'POST',
+                data: {type: type},
+                async: true
+            }).done(function(results) {
+                if (results.success) {
+                    message('success', 'Calculate done!');
+                } else {
+                    message('error', 'Calculate fail!');
+                }
+            }).fail(function(error) {
+                message('error', 'Sorry! Please try again or contact to administrator!');
+            });
+        });
+    }
     
 
     return {
@@ -36,6 +69,7 @@ var setting = function() {
             options.apiUrl = apiUrl;
             options.token = token;
             on_click_make_plan();
+            on_click_calculate();
         }
     }
 }();
